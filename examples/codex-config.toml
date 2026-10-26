@@ -1,0 +1,4 @@
+# Merge into your existing configuration. Do not replace unrelated settings.
+[mcp_servers.skill_library]
+command = "node"
+args = ["/absolute/path/to/skill-library-mcp/dist/stdio.js"]

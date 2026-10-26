@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "skill-library": {
+      "command": "node",
+      "args": ["/absolute/path/to/skill-library-mcp/dist/stdio.js"]
+    }
+  }
+}

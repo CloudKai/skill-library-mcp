@@ -1,0 +1,35 @@
+{
+  "name": "personal-skill-library-mcp",
+  "version": "0.5.0",
+  "private": true,
+  "type": "module",
+  "description": "A local, curated skill library exposed through four read-only MCP tools.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "start": "node dist/stdio.js",
+    "http": "node dist/http.js",
+    "ui": "npm run build && node dist/http.js",
+    "demo": "node dist/demo.js",
+    "browse": "node dist/cli.js",
+    "validate": "node dist/cli.js validate",
+    "import-skill": "node dist/import.js",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "scan-skills": "npm run build && node dist/scan-local.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "express": "^5.1.0",
+    "smol-toml": "^1.9.1",
+    "yaml": "^2.8.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0"
+  }
+}

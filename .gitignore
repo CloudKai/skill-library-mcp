@@ -1,0 +1,28 @@
+node_modules/
+dist/
+.env
+.DS_Store
+coverage/
+*.tmp
+library/*.lock
+output/
+.impeccable/review/
+
+# Runtime activation recovery stays local; preserve this file on interrupted operations.
+library/native-transaction.json
+
+# Owner imports, private source paths, and project selections are never shared.
+library/.local/
+library/projects.json
+
+.vercel/
+.env*
+!.env.example
+.vercel
+# Local editor settings, caches, generated files and logs.
+.vscode/
+.idea/
+.nyc_output/
+outputs/
+*.log
+*.tsbuildinfo

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse your saved agent skills and choose which ones are enabled for each project.">
+  <title>Skill Library</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/sidebar.js" defer></script><script src="/demo-mode.js" defer></script>
+  <script src="/app.js" type="module"></script>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to skills</a>
+  <div class="app-shell">
+    <header class="shell-bar"><button id="sidebar-toggle" class="icon-button sidebar-toggle" type="button" aria-label="Hide sidebar" title="Hide sidebar" aria-controls="app-sidebar" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M5.5 8h1M5.5 12h1M5.5 16h1"/></svg></button><a class="brand" href="/" aria-label="Skill Library home">
+        <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="3" y="4" width="6" height="20" rx="1.5" fill="currentColor"/><rect x="11" y="4" width="6" height="20" rx="1.5" fill="currentColor"/><path d="m19 5 5-1 3 19-5 1z" fill="currentColor"/></svg>
+        <span>Skill Library</span>
+      </a></header><aside id="app-sidebar" class="sidebar" aria-label="Library navigation">
+
+      <div class="navigation-group">
+        <button id="library-nav" class="nav-item" type="button"><span class="nav-icon" data-icon="library"></span><span>Library</span><span id="library-count" class="nav-count">—</span></button>
+      <div class="sidebar-subnav sidebar-projects">
+      <div class="project-heading"><h2>Project access</h2><button id="new-project" class="icon-button" aria-label="Create project" title="Create project" type="button"><span data-icon="plus"></span></button></div>
+      <nav id="projects-nav" aria-label="Projects"><p class="nav-loading">Loading projects…</p></nav>
+      <details id="inventory-navigation" class="sidebar-section inventory-navigation"><summary>Found on this computer</summary><nav id="inventory-nav" aria-label="Scanned source locations"><p class="nav-loading">Scan to discover locations.</p></nav></details>
+      </div>
+      <a class="nav-item guide-link" href="/marketplace.html"><span class="nav-icon" data-icon="market"></span><span>Marketplace</span></a>
+      <a id="guide-link" class="nav-item guide-link" href="/guide.html"><span class="nav-icon" data-icon="document"></span><span>MCP guide</span></a></div>
+      <div class="sidebar-bottom"><span class="local-indicator" aria-hidden="true"></span><div><strong>Local workspace</strong></div></div>
+    </aside>
+
+    <main id="workspace" class="workspace" tabindex="-1">
+      <div class="mobile-project"><label for="project-select">Workspace</label><select id="project-select" aria-label="Choose project"><option>Loading…</option></select></div>
+      <header class="workspace-header">
+        <div class="heading-copy"><p id="breadcrumb" class="breadcrumb">Your collection</p><h1 id="page-title">Your skills</h1><p id="page-description" class="page-description">Loading your saved workflows…</p></div>
+        <div class="header-actions"><button id="scan-open" class="button secondary" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3H4v4M16 3h4v4M4 17v4h4M20 17v4h-4M3 12h18"/></svg>Scan installed skills</button><button id="connect-project" class="button primary" type="button" hidden><span data-icon="plug"></span>Connect project</button></div>
+      </header>
+      <div id="error-banner" class="error-banner" role="alert" hidden><span id="error-text"></span><button id="retry" class="text-button" type="button">Refresh</button></div>
+      <section id="inventory-panel" class="inventory-panel" aria-label="Discovered skills" hidden><div class="inventory-toolbar"><label for="inventory-group">Source location</label><select id="inventory-group"></select><label class="sr-only" for="inventory-search">Search discovered skills</label><input id="inventory-search" type="search" placeholder="Search discovered skills or platforms…"><button id="inventory-rescan" class="button secondary" type="button">Scan again</button></div><p id="inventory-coverage" class="scope-note"></p><details id="inventory-report" class="inventory-report"><summary>Scan coverage &amp; warnings</summary><p id="inventory-coverage-detail"></p><ul id="inventory-warnings"></ul></details><div id="inventory-results" aria-live="polite"></div></section>
+      <div id="library-browser" class="browser-layout">
+        <section class="skill-browser" aria-label="Skills">
+          <div class="search-wrap"><span data-icon="search"></span><input id="skill-search" type="search" placeholder="Search your skills…" aria-label="Search skills" autocomplete="off"><kbd aria-hidden="true">⌘ K</kbd></div>
+          <div class="browser-toolbar"><div id="filters" class="filters" aria-label="Filter skills"><button data-filter="all" type="button" aria-pressed="true">All skills <span id="count-all">0</span></button><button data-filter="enabled" type="button" aria-pressed="false">Enabled <span id="count-enabled">0</span></button><button data-filter="disabled" type="button" aria-pressed="false">Not enabled <span id="count-disabled">0</span></button></div></div>
+          <div id="scope-note" class="scope-note"><span data-icon="info"></span><p>Select a project to manage the skills your assistant can access.</p></div>
+          <div id="skills-list" class="skills-list" aria-label="Saved skills"><div class="loading-state">Loading your library…</div></div>
+          <footer class="list-footer"><span id="result-count"></span><span id="save-state" role="status" aria-live="polite"></span></footer>
+        </section>
+        <aside id="skill-detail" class="skill-detail" aria-label="Skill details"><div class="detail-empty"><span data-icon="document"></span><h2>A closer look</h2><p>Select a skill to read its workflow, requirements, and original source.</p></div></aside>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="create-dialog" class="dialog">
+    <form id="create-form">
+      <div class="dialog-heading"><h2>Create a project</h2><button class="icon-button" data-close="create-dialog" type="button" aria-label="Close create project"><span data-icon="close"></span></button></div>
+      <p class="dialog-description">Give each project its own focused set of skills. New projects start with no skills enabled.</p>
+      <label for="new-name">Project name</label><input id="new-name" name="name" maxlength="100" placeholder="e.g. Portfolio website" required>
+      <label for="new-path">Project folder <span class="optional">optional</span></label><input id="new-path" name="path" maxlength="500" placeholder="/Users/you/projects/portfolio">
+      <p class="field-help">A label to help you recognize the project. This does not read or modify that folder.</p>
+      <p id="create-error" class="form-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button class="button secondary" data-close="create-dialog" type="button">Cancel</button><button id="create-submit" class="button primary" type="submit">Create project</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="connect-dialog" class="dialog connection-dialog">
+    <div class="dialog-heading"><h2>Connect this project</h2><button class="icon-button" data-close="connect-dialog" type="button" aria-label="Close connection instructions"><span data-icon="close"></span></button></div>
+    <p id="connection-description" class="dialog-description"></p>
+    <label for="connection-format">Connection format</label><select id="connection-format"><option value="toml">Codex · config.toml</option><option value="json">MCP client · JSON</option><option value="http">Streamable HTTP · URL</option></select>
+    <label class="privacy-toggle"><input id="connection-local-paths" type="checkbox">Show local configuration (contains private paths)</label>
+    <pre id="connection-code" class="connection-code" tabindex="0">Loading configuration…</pre>
+    <p class="field-help">Examples use placeholder paths and a placeholder project ID. Replace them, or explicitly show local configuration to copy working settings. Merge the result into your MCP configuration, then reconnect the server. Only this project’s enabled skills will be returned. Changes made here apply to subsequent tool calls.</p>
+    <p id="connection-error" class="form-error" role="alert" hidden></p>
+    <div class="dialog-actions"><button id="copy-connection" class="button primary" type="button"><span data-icon="copy"></span>Copy configuration</button></div>
+  </dialog>
+<dialog id="native-dialog" aria-labelledby="native-title" class="dialog connection-dialog"><form id="native-form"><div class="dialog-heading"><h2 id="native-title">Manage coding-app copies</h2><button class="icon-button" type="button" data-close="native-dialog" aria-label="Close coding-app settings"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div><p id="native-description" class="dialog-description"></p><label for="native-root">Project directory</label><input id="native-root" type="text" maxlength="1024" placeholder="/absolute/path/to/project"><fieldset class="native-targets"><legend>Coding apps</legend><label><input type="checkbox" name="native-app" value="codex">Codex</label><label><input type="checkbox" name="native-app" value="claude-code">Claude Code</label><label><input type="checkbox" name="native-app" value="cursor">Cursor</label></fieldset><p class="field-help">The project switch controls MCP access and these managed copies together. An enabled skill is copied now; a disabled skill is copied when enabled. Existing unrelated skills are preserved. Reload the coding agent after changes if needed.</p><p id="native-error" class="form-error" role="alert" hidden></p><div class="dialog-actions"><button class="button secondary" data-close="native-dialog" type="button">Cancel</button><button id="native-submit" class="button primary" type="submit">Save destinations</button></div></form></dialog>
+  <dialog id="scan-dialog" class="dialog scan-dialog" aria-labelledby="scan-title">
+    <div class="dialog-heading"><h2 id="scan-title">Scan installed skills</h2><button id="scan-close" class="icon-button" type="button" aria-label="Close skill scanner"><span data-icon="close"></span></button></div>
+    <p class="dialog-description">Find local SKILL.md packages across platforms. Preview what was found, then import copies into your library. New imports stay disabled for every project.</p>
+    <form id="scan-form">
+      <div class="scan-fields"><div><label for="scan-scope">Where to scan</label><select id="scan-scope"><option value="all">Global &amp; projects</option><option value="global">Global only</option><option value="projects">Projects only</option></select></div><div><label for="scan-project">Registered projects</label><select id="scan-project"><option value="">All registered projects</option></select></div></div>
+      <fieldset id="scan-platforms" class="scan-platforms"><legend>Platforms</legend><label><input type="checkbox" value="shared" checked>Shared agent skills</label><label><input type="checkbox" value="codex" checked>Codex</label><label><input type="checkbox" value="claude-code" checked>Claude Code</label><label><input type="checkbox" value="cursor" checked>Cursor</label><label><input type="checkbox" value="opencode" checked>OpenCode</label></fieldset>
+      <details class="scan-extra"><summary>Additional folders &amp; cached packages</summary><label for="scan-project-folders">Project or workspace folders</label><textarea id="scan-project-folders" rows="2" placeholder="/absolute/path/to/projects"></textarea><p class="field-help">One absolute path per line. Finds supported skill folders in nested projects, including monorepos. Used by Global &amp; projects or Projects only.</p><label for="scan-skill-folders">Custom skill folders</label><textarea id="scan-skill-folders" rows="2" placeholder="/absolute/path/to/my-skills"></textarea><p class="field-help">For another platform or a custom location. The folder must contain SKILL.md packages; rules and commands are not converted.</p><label class="scan-cache-option"><input id="scan-cached" type="checkbox">Include cached plugin packages with unverified installation status</label></details>
+      <p class="field-help">This computer only. No AI or cloud requests. The scan checks known folders and enabled/registered plugins; it does not verify what an agent currently loads or search the whole drive. Closed projects need a registered path or an added workspace folder.</p>
+      <div class="scan-run"><button id="scan-run" class="button secondary" type="submit">Scan local folders</button><span id="scan-status" role="status" aria-live="polite"></span></div>
+    </form>
+    <p id="scan-error" class="form-error" role="alert" hidden></p>
+    <section id="scan-preview" aria-label="Scan results" hidden><div class="scan-result-heading"><h3 id="scan-results-title" tabindex="-1">Found skills</h3><button id="scan-select-new" class="text-button" type="button">Select new skills</button></div><p id="scan-summary" class="field-help"></p><div id="scan-items"></div><details class="scan-locations"><summary>Scanned locations &amp; coverage</summary><p id="scan-coverage" class="field-help"></p><div id="scan-locations"></div><ul id="scan-warnings"></ul></details></section>
+    <div class="dialog-actions"><button id="scan-import" class="button primary" type="button" disabled>Import selected</button></div><p id="scan-import-note" class="field-help" role="status" aria-live="polite"></p>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

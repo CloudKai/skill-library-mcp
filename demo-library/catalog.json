@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "skill_id": "demo/plan-a-change",
+      "package": "packages/plan-a-change",
+      "folder": "Example workflows",
+      "standalone": false,
+      "tags": [
+        "sample"
+      ],
+      "preferred": false,
+      "status": "active",
+      "personal_notes": "Illustrative sample authored for the public demo; this is not an imported personal skill.",
+      "requirements": [],
+      "source": {
+        "url": "local:sample",
+        "path": "plan-a-change",
+        "note": "Synthetic public demonstration content."
+      }
+    },
+    {
+      "skill_id": "demo/review-a-change",
+      "package": "packages/review-a-change",
+      "folder": "Example workflows",
+      "standalone": false,
+      "tags": [
+        "sample"
+      ],
+      "preferred": false,
+      "status": "active",
+      "personal_notes": "Illustrative sample authored for the public demo; this is not an imported personal skill.",
+      "requirements": [],
+      "source": {
+        "url": "local:sample",
+        "path": "review-a-change",
+        "note": "Synthetic public demonstration content."
+      }
+    },
+    {
+      "skill_id": "demo/debug-an-issue",
+      "package": "packages/debug-an-issue",
+      "folder": "Example workflows",
+      "standalone": true,
+      "tags": [
+        "sample"
+      ],
+      "preferred": false,
+      "status": "active",
+      "personal_notes": "Illustrative sample authored for the public demo; this is not an imported personal skill.",
+      "requirements": [],
+      "source": {
+        "url": "local:sample",
+        "path": "debug-an-issue",
+        "note": "Synthetic public demonstration content."
+      }
+    }
+  ]
+}

@@ -1,0 +1,341 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-26T13:01:36.323978+00:00",
+  "title": "Design System: Skill Library",
+  "extensions": {
+    "colorMeta": {
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "tonalRamp": [
+          "oklch(15% 0.0029 264.54)",
+          "oklch(26% 0.0029 264.54)",
+          "oklch(38% 0.0029 264.54)",
+          "oklch(49% 0.0029 264.54)",
+          "oklch(61% 0.0029 264.54)",
+          "oklch(72% 0.0029 264.54)",
+          "oklch(84% 0.0029 264.54)",
+          "oklch(95% 0.0029 264.54)"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "nav": {
+        "role": "neutral",
+        "displayName": "Nav",
+        "tonalRamp": [
+          "oklch(15% 0.0058 264.53)",
+          "oklch(26% 0.0058 264.53)",
+          "oklch(38% 0.0058 264.53)",
+          "oklch(49% 0.0058 264.53)",
+          "oklch(61% 0.0058 264.53)",
+          "oklch(72% 0.0058 264.53)",
+          "oklch(84% 0.0058 264.53)",
+          "oklch(95% 0.0058 264.53)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0319 256.28)",
+          "oklch(26% 0.0319 256.28)",
+          "oklch(38% 0.0319 256.28)",
+          "oklch(49% 0.0319 256.28)",
+          "oklch(61% 0.0319 256.28)",
+          "oklch(72% 0.0319 256.28)",
+          "oklch(84% 0.0319 256.28)",
+          "oklch(95% 0.0319 256.28)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0334 254.81)",
+          "oklch(26% 0.0334 254.81)",
+          "oklch(38% 0.0334 254.81)",
+          "oklch(49% 0.0334 254.81)",
+          "oklch(61% 0.0334 254.81)",
+          "oklch(72% 0.0334 254.81)",
+          "oklch(84% 0.0334 254.81)",
+          "oklch(95% 0.0334 254.81)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15% 0.0115 252.09)",
+          "oklch(26% 0.0115 252.09)",
+          "oklch(38% 0.0115 252.09)",
+          "oklch(49% 0.0115 252.09)",
+          "oklch(61% 0.0115 252.09)",
+          "oklch(72% 0.0115 252.09)",
+          "oklch(84% 0.0115 252.09)",
+          "oklch(95% 0.0115 252.09)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Accent",
+        "tonalRamp": [
+          "oklch(15% 0.1785 265.40)",
+          "oklch(26% 0.1785 265.40)",
+          "oklch(38% 0.1785 265.40)",
+          "oklch(49% 0.1785 265.40)",
+          "oklch(61% 0.1785 265.40)",
+          "oklch(72% 0.1785 265.40)",
+          "oklch(84% 0.1785 265.40)",
+          "oklch(95% 0.1785 265.40)"
+        ]
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "Accent Soft",
+        "tonalRamp": [
+          "oklch(15% 0.0199 267.29)",
+          "oklch(26% 0.0199 267.29)",
+          "oklch(38% 0.0199 267.29)",
+          "oklch(49% 0.0199 267.29)",
+          "oklch(61% 0.0199 267.29)",
+          "oklch(72% 0.0199 267.29)",
+          "oklch(84% 0.0199 267.29)",
+          "oklch(95% 0.0199 267.29)"
+        ]
+      },
+      "green": {
+        "role": "neutral",
+        "displayName": "Green",
+        "tonalRamp": [
+          "oklch(15% 0.0984 158.45)",
+          "oklch(26% 0.0984 158.45)",
+          "oklch(38% 0.0984 158.45)",
+          "oklch(49% 0.0984 158.45)",
+          "oklch(61% 0.0984 158.45)",
+          "oklch(72% 0.0984 158.45)",
+          "oklch(84% 0.0984 158.45)",
+          "oklch(95% 0.0984 158.45)"
+        ]
+      },
+      "green-soft": {
+        "role": "neutral",
+        "displayName": "Green Soft",
+        "tonalRamp": [
+          "oklch(15% 0.0140 155.59)",
+          "oklch(26% 0.0140 155.59)",
+          "oklch(38% 0.0140 155.59)",
+          "oklch(49% 0.0140 155.59)",
+          "oklch(61% 0.0140 155.59)",
+          "oklch(72% 0.0140 155.59)",
+          "oklch(84% 0.0140 155.59)",
+          "oklch(95% 0.0140 155.59)"
+        ]
+      },
+      "danger": {
+        "role": "neutral",
+        "displayName": "Danger",
+        "tonalRamp": [
+          "oklch(15% 0.1557 21.69)",
+          "oklch(26% 0.1557 21.69)",
+          "oklch(38% 0.1557 21.69)",
+          "oklch(49% 0.1557 21.69)",
+          "oklch(61% 0.1557 21.69)",
+          "oklch(72% 0.1557 21.69)",
+          "oklch(84% 0.1557 21.69)",
+          "oklch(95% 0.1557 21.69)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Page heading",
+        "purpose": "Current project or library title."
+      },
+      "title": {
+        "displayName": "Detail heading",
+        "purpose": "Selected skill title."
+      },
+      "body": {
+        "displayName": "System UI",
+        "purpose": "Native-like app controls and text."
+      },
+      "label": {
+        "displayName": "Compact metadata",
+        "purpose": "Source, status, navigation metadata, and filters."
+      },
+      "code": {
+        "displayName": "Code and file paths",
+        "purpose": "Instructions and source revisions."
+      }
+    },
+    "shadows": [
+      {
+        "name": "dialog",
+        "value": "0 18px 60px #1e293829",
+        "purpose": "Functional modal separation."
+      },
+      {
+        "name": "toast",
+        "value": "0 6px 20px #1e29381a",
+        "purpose": "Transient status feedback."
+      }
+    ],
+    "motion": [
+      {
+        "name": "detail-appear",
+        "value": "160ms ease-out",
+        "purpose": "Opacity .8 to 1 and translate 0 3px to 0 0 on detail content."
+      },
+      {
+        "name": "switch-thumb",
+        "value": "transform 150ms ease-out",
+        "purpose": "Translate enabled thumb by 13px."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide",
+        "value": "1500px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "1150px"
+      },
+      {
+        "name": "stacked-detail",
+        "value": "960px"
+      },
+      {
+        "name": "mobile",
+        "value": "620px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action.",
+      "html": "<button class=\"ds-button-primary\" type=\"button\">Connect project</button>",
+      "css": ".ds-button-primary{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:9px 13px;border-radius:6px;font-size:13px;font-weight:550;white-space:nowrap;cursor:pointer;background:var(--accent,#294fbd);color:white;border:1px solid transparent;}.ds-button-primary:hover{background:#2343a2}.ds-button-primary:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary and cancel actions.",
+      "html": "<button class=\"ds-button-secondary\" type=\"button\">Cancel</button>",
+      "css": ".ds-button-secondary{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:9px 13px;border-radius:6px;font-size:13px;font-weight:550;white-space:nowrap;cursor:pointer;background:white;color:var(--ink,#1e2938);border:1px solid var(--line,#dce2e9);}.ds-button-secondary:hover{background:#f3f5f9}.ds-button-secondary:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "search-input",
+      "description": "Search the saved skill list.",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m16 16 4 4\"/></svg><input type=\"search\" aria-label=\"Search skills\" placeholder=\"Search your skills…\"></label>",
+      "css": ".ds-search{position:relative;display:flex;align-items:center}.ds-search svg{position:absolute;left:12px;width:18px;height:18px;color:var(--muted,#596779);pointer-events:none}.ds-search input{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-size:14px;width:100%;height:40px;border:1px solid #cbd3df;border-radius:6px;padding:9px 60px 9px 38px;background:white;color:var(--ink,#1e2938);caret-color:var(--accent,#294fbd)}.ds-search input::placeholder{color:#6a7585}.ds-search input:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}"
+    },
+    {
+      "name": "Project Navigation",
+      "kind": "nav",
+      "refersTo": "project-navigation",
+      "description": "Selected project in the sidebar. Project navigation follows Library and on-page section links follow MCP guide. Marketplace ranking filters remain in the main content without duplicate sidebar controls.",
+      "html": "<button class=\"ds-nav\" type=\"button\" aria-current=\"page\">Portfolio website <span>3</span></button>",
+      "css": ".ds-nav{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;display:flex;align-items:center;width:100%;gap:9px;text-align:left;padding:10px;border:0;border-radius:6px;min-height:44px;background:#dfe6f6;color:#1e429d;font-size:14px;font-weight:600;cursor:pointer}.ds-nav span{margin-left:auto;font-size:12px;font-variant-numeric:tabular-nums}.ds-nav:hover{background:#e3e7ee}.ds-nav:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}"
+    },
+    {
+      "name": "Skill Tag",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Compact skill requirement or category metadata.",
+      "html": "<span class=\"ds-tag\">Workflow</span>",
+      "css": ".ds-tag{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;display:inline-block;font-size:12px;color:#4f6075;background:#e9edf3;padding:3px 6px;border-radius:4px}"
+    },
+    {
+      "name": "Enabled Switch",
+      "kind": "button",
+      "refersTo": "skill-switch",
+      "description": "Project availability control; its status is confirmed by the server.",
+      "html": "<button class=\"ds-switch\" type=\"button\" role=\"switch\" aria-checked=\"true\" aria-label=\"Enable skill\"></button>",
+      "css": ".ds-switch{display:inline-flex;align-items:center;width:32px;height:19px;border:0;border-radius:12px;background:#8590a0;padding:3px;cursor:pointer}.ds-switch::after{content:\"\";width:13px;height:13px;background:white;border-radius:50%;transition:transform .15s ease-out}.ds-switch[aria-checked=\"true\"]{background:var(--accent,#294fbd)}.ds-switch[aria-checked=\"true\"]::after{transform:translateX(13px)}.ds-switch:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-switch::after{transition:none}}"
+    },
+    {
+      "name": "Skill Row",
+      "kind": "custom",
+      "refersTo": "skill-row",
+      "description": "A selectable skill with source, description, and status. Observed source locations add a compact platform/scope tag; the detail pane reuses the source-location disclosure with wrapped paths and last-seen metadata.",
+      "html": "<article class=\"ds-row\"><button class=\"ds-content\" type=\"button\"><strong>Code review</strong><span>Matt Pocock</span><p>Review changes against project standards and the originating specification.</p></button><span class=\"ds-status\">Enabled</span></article>",
+      "css": ".ds-row{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;padding:21px 20px;border-bottom:1px solid var(--line,#dce2e9);background:#f1f5ff}.ds-content{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;min-width:0;text-align:left;border:0;background:transparent;padding:0;cursor:pointer;color:var(--ink,#1e2938)}.ds-content strong{display:block;font-size:14px;font-weight:650;margin-bottom:5px}.ds-content span{display:block;font-size:12px;color:var(--muted,#596779);margin-bottom:9px}.ds-content p{margin:0;font-size:13px;color:var(--muted,#596779);line-height:1.65}.ds-status{font-size:12px;color:var(--green,#21714b)}.ds-content:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}"
+    },
+    {
+      "name": "Skill Folder",
+      "kind": "custom",
+      "description": "Collection-only container, collapsed by default; standalone skills use the regular skill row and one switch for all their commands. Disclosure expands independently of activation, revealing individual skill switches. Header combines a 23px folder icon, count summary, and 24px master checkbox. Preview shows expanded mixed state with indented children. Checkbox false/true/mixed means Not enabled/All enabled/Some enabled; full uses a check icon and mixed uses a minus. Activation applies all current collection members, including filtered-out skills, only to the selected project; future imports do not auto-enable. Search expands matching collections. No checkbox is shown in unscoped library view.",
+      "html": "<section class=\"ds-skill-folder\" aria-label=\"General skills\"><div class=\"ds-folder-header\"><button class=\"ds-folder-disclosure\" type=\"button\" aria-expanded=\"true\" aria-controls=\"ds-general-skills\"><span class=\"ds-folder-chevron ds-is-open\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 5 7 7-7 7\"/></svg></span><span class=\"ds-folder-emblem\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9H3z\"/></svg></span><span class=\"ds-folder-copy\"><span class=\"ds-folder-title\">General skills</span><span class=\"ds-folder-summary\">1 of 3 enabled</span></span></button><div class=\"ds-folder-action\"><button class=\"ds-folder-checkbox\" type=\"button\" role=\"checkbox\" aria-checked=\"mixed\" aria-label=\"Enable all General skills for Portfolio website\" title=\"Applies to all 3 skills in this folder, including filtered-out skills\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/></svg></button><span class=\"ds-folder-status\">Some enabled</span></div></div><div class=\"ds-folder-children\" id=\"ds-general-skills\"><button class=\"ds-folder-child\" type=\"button\"><span class=\"ds-child-emblem\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 3h8l4 4v14H6zM14 3v5h4M9 12h6M9 16h6\"/></svg></span><span><span class=\"ds-child-title\">Code review</span><span class=\"ds-child-description\">Inspect an individual skill and change its project availability.</span></span></button></div></section>",
+      "css": ".ds-skill-folder{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-size:14px;color:var(--ink,#1e2938)}.ds-folder-header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;padding:18px 20px;border-bottom:1px solid var(--line,#dce2e9)}.ds-folder-disclosure{font:inherit;color:inherit;display:flex;align-items:center;gap:10px;min-width:0;min-height:42px;padding:0;background:transparent;border:0;border-radius:6px;text-align:left;cursor:pointer}.ds-folder-disclosure:hover .ds-folder-title{color:var(--accent,#294fbd)}.ds-folder-chevron{display:inline-flex;color:var(--muted,#596779)}.ds-folder-chevron svg{width:14px;height:14px;display:block}.ds-folder-chevron.ds-is-open{transform:rotate(90deg)}.ds-folder-emblem{display:inline-flex;color:#35527a}.ds-folder-emblem svg{width:23px;height:23px;display:block}.ds-folder-copy{min-width:0;display:grid;gap:6px}.ds-folder-title{font-size:14px;font-weight:650;overflow-wrap:anywhere}.ds-folder-summary{font-size:12px;color:var(--muted,#596779)}.ds-folder-action{display:grid;justify-items:end;gap:7px}.ds-folder-checkbox{display:flex;align-items:center;justify-content:center;width:24px;height:24px;padding:3px;border:1px solid #8590a0;border-radius:4px;background:white;color:white;cursor:pointer}.ds-folder-checkbox svg{width:16px;height:16px;display:block}.ds-folder-checkbox[aria-checked=\"false\"] svg{visibility:hidden}.ds-folder-checkbox[aria-checked=\"true\"],.ds-folder-checkbox[aria-checked=\"mixed\"]{background:var(--accent,#294fbd);border-color:var(--accent,#294fbd)}.ds-folder-disclosure:focus-visible,.ds-folder-checkbox:focus-visible,.ds-folder-child:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}.ds-folder-checkbox:disabled{cursor:wait;opacity:.55}.ds-folder-status{color:var(--muted,#596779);font-size:12px;white-space:nowrap}.ds-folder-status.ds-is-enabled{color:var(--green,#21714b)}.ds-folder-children[hidden]{display:none}.ds-folder-child{font:inherit;color:inherit;display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line,#dce2e9);background:transparent;padding:21px 20px 21px 44px;cursor:pointer}.ds-folder-child:hover{background:#fafbfd}.ds-child-emblem{display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:#e8edf6;color:#35527a;border-radius:8px;flex-shrink:0}.ds-child-emblem svg{width:17px;height:17px;display:block}.ds-child-title{display:block;font-size:14px;font-weight:650;margin-bottom:5px}.ds-child-description{font-size:13px;color:var(--muted,#596779);line-height:1.65}@media(max-width:620px){.ds-folder-header{padding:17px 16px;gap:10px}.ds-folder-disclosure{gap:8px}.ds-folder-child{padding:20px 16px 20px 28px;gap:10px}.ds-child-emblem{border-radius:6px}.ds-child-title{font-size:13px}.ds-child-description{font-size:12px}}"
+    },
+    {
+      "name": "Guide Configuration",
+      "kind": "custom",
+      "description": "A format selector above a general placeholder-only MCP example, with wrapped code and copy feedback. The guide does not load saved projects or local configuration. Its sidebar highlights the current section and keeps that link visible within desktop/tablet navigation without scrolling the article.",
+      "html": "<section class=\"ds-guide-config\" aria-label=\"MCP configuration example\"><div class=\"ds-guide-fields\"><label for=\"ds-guide-format\">Example format<select id=\"ds-guide-format\"><option>stdio · TOML</option><option>stdio · JSON</option><option>Streamable HTTP · URL</option></select></label></div><p class=\"ds-guide-help\">Example only. Replace the paths and project ID before connecting.</p><pre class=\"ds-guide-code\" tabindex=\"0\" aria-label=\"Generic MCP configuration example\">[mcp_servers.skills]\ncommand = \"node\"\nargs = [\"/absolute/path/to/library-server/dist/stdio.js\"]\n\n[mcp_servers.skills.env]\nSKILL_LIBRARY_PROJECT = \"your-project-id\"\nSKILL_LIBRARY_DIR = \"/absolute/path/to/library\"</pre><div class=\"ds-guide-copy\"><button type=\"button\" class=\"ds-guide-button\">Copy example</button><span role=\"status\">Example copied; replace placeholders before connecting.</span></div></section>",
+      "css": ".ds-guide-config{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;margin:20px 0;padding:22px;border:1px solid var(--line,#dce2e9);border-radius:9px;background:var(--panel,#fff);color:var(--ink,#1e2938);font-size:14px;line-height:1.8}.ds-guide-fields{display:grid;grid-template-columns:1fr 1fr;gap:18px}.ds-guide-fields label{display:block;min-width:0;font-size:12px;font-weight:600}.ds-guide-fields select{font:inherit;display:block;width:100%;min-width:0;min-height:40px;margin-top:8px;padding:8px;border:1px solid var(--line,#dce2e9);border-radius:6px;background:var(--panel,#fff);color:var(--ink,#1e2938)}.ds-guide-help{font-size:12px;color:var(--muted,#596779);line-height:1.7}.ds-guide-code{white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f3f7;border-radius:7px;padding:18px;font:12px/1.8 ui-monospace,SFMono-Regular,monospace;max-height:310px;overflow-y:auto}.ds-guide-copy{display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:12px;color:var(--green,#21714b)}.ds-guide-button{font-family:inherit;display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:9px 13px;border:1px solid transparent;border-radius:6px;background:var(--accent,#294fbd);color:white;font-size:13px;font-weight:550;white-space:nowrap;cursor:pointer}.ds-guide-button:hover{background:#2343a2}.ds-guide-fields select:focus-visible,.ds-guide-code:focus-visible,.ds-guide-button:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}.ds-guide-button:disabled{cursor:wait;opacity:.55}@media(max-width:620px){.ds-guide-fields{grid-template-columns:1fr;gap:16px}.ds-guide-config{padding:16px}}"
+    },
+    {
+      "name": "Shared Shell Bar",
+      "kind": "nav",
+      "refersTo": "shell-bar",
+      "description": "Sticky 64px bar shared by the library, Marketplace, and guide. Keeps the brand home link and 44px sidebar icon available when navigation is hidden. The icon uses the sidebar-toggle primitive and synchronized Show/Hide sidebar, aria-expanded, and aria-controls semantics. The expanded sidebar retains 224/190/180px widths, scrolls below the bar, and yields its column when hidden; at 620px and below it opens inline, resets its own scroll position, and is brought into view below the bar on an explicit open. Guide anchors and both detail panes retain sticky-bar scroll offsets. Wide and narrow (960px and below) preferences persist separately; narrow defaults closed. Closing restores sidebar focus to the toggle; Escape closes from navigation unless a dialog is open. The library project selector remains available while hidden. Guide contents use a native, initially closed disclosure. Static preview shows the expanded control; page behavior is supplied by sidebar.js.",
+      "html": "<header class=\"ds-shell-bar\"><button class=\"ds-sidebar-toggle\" type=\"button\" aria-label=\"Hide sidebar\" title=\"Hide sidebar\" aria-expanded=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M9 4v16M5.5 8h1M5.5 12h1M5.5 16h1\"/></svg></button><a class=\"ds-shell-brand\" href=\"/\" aria-label=\"Skill Library home\"><svg viewBox=\"0 0 28 28\" fill=\"none\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"6\" height=\"20\" rx=\"1.5\" fill=\"currentColor\"/><rect x=\"11\" y=\"4\" width=\"6\" height=\"20\" rx=\"1.5\" fill=\"currentColor\"/><path d=\"m19 5 5-1 3 19-5 1z\" fill=\"currentColor\"/></svg><span>Skill Library</span></a></header>",
+      "css": ".ds-shell-bar{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;display:flex;align-items:center;gap:12px;height:var(--shell-bar-height,64px);padding:10px 16px;background:var(--canvas,#f6f7f9);border-bottom:1px solid var(--line,#dce2e9);position:sticky;top:0;z-index:10}.ds-sidebar-toggle{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex-shrink:0;background:transparent;border:0;border-radius:6px;color:var(--muted,#596779);cursor:pointer}.ds-sidebar-toggle svg{display:block;width:18px;height:18px;flex-shrink:0}.ds-sidebar-toggle[aria-expanded=\"true\"],.ds-sidebar-toggle:hover{background:var(--accent-soft,#e8eefc);color:var(--accent,#294fbd)}.ds-shell-brand{display:flex;align-items:center;gap:10px;padding:0;color:var(--ink,#1e2938);font-weight:650;font-size:17px;letter-spacing:-.025em;text-decoration:none}.ds-shell-brand svg{display:block;width:25px;height:25px;flex-shrink:0;color:var(--accent,#294fbd)}.ds-sidebar-toggle:focus-visible,.ds-shell-brand:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}@media(max-width:620px){.ds-shell-brand{font-size:16px}}"
+    },
+    {
+      "name": "Local Scanner Review Row",
+      "kind": "custom",
+      "description": "Flat review row inside the native scanner dialog. New valid packages are preselected; cached packages require selection and retain unverified status. Sources and coverage are expandable before import. Imported packages remain disabled until explicitly enabled for a project. The dialog is at most 850px wide, scrolls within the viewport, and stacks its scope fields at 620px.",
+      "html": "<article class=\"ds-scan-row\"><label class=\"ds-scan-label\"><input type=\"checkbox\" checked><span class=\"ds-scan-copy\"><strong>Code review</strong><span>New skill · General skills</span><p>Review changes against project standards and the originating specification.</p></span></label><details><summary>Source · 3 files</summary><p>Codex · global</p><code>/path/to/skills/code-review</code></details></article>",
+      "css": ".ds-scan-row{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;color:var(--ink,#1e2938);padding:16px 0;border-bottom:1px solid var(--line,#dce2e9)}.ds-scan-label{display:flex;align-items:flex-start;gap:12px;margin:0;min-height:44px;cursor:pointer;font-weight:400}.ds-scan-label input{width:18px;height:18px;margin:3px 0 0;padding:0;flex-shrink:0;accent-color:var(--accent,#294fbd)}.ds-scan-copy{min-width:0;display:grid;gap:6px}.ds-scan-copy strong{overflow-wrap:anywhere;font-size:13px}.ds-scan-copy span,.ds-scan-copy p{margin:0;color:var(--muted,#596779);font-size:12px;line-height:1.65;overflow-wrap:anywhere}.ds-scan-row details{margin:8px 0 0 30px;font-size:12px;color:var(--muted,#596779)}.ds-scan-row summary{cursor:pointer;padding:6px 0}.ds-scan-row code{display:block;font:12px/1.6 ui-monospace,SFMono-Regular,monospace;overflow-wrap:anywhere}.ds-scan-row input:focus-visible,.ds-scan-row summary:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}"
+    },
+    {
+      "name": "Source Inventory Row",
+      "kind": "custom",
+      "description": "Read-only observed skill, distinct from project activation. Flat divided rows pair a muted platform/scope summary with import status, expandable source paths and last-seen times, and a View saved skill or Scan to review & import action. Source views share the existing navigation treatment, counts and compact path hints. Their selector and search stay available in the main panel; the selected source view persists. Saved scans open the navigation disclosure. Rows and toolbar reduce padding from 20px to 16px at 620px, with wrapping row headings.",
+      "html": "<article class=\"ds-inventory-row\"><div class=\"ds-inventory-heading\"><div><h2>Code review</h2><p>Global · Codex</p></div><span class=\"ds-inventory-tag\">Not imported</span></div><p class=\"ds-inventory-description\">Review changes against project standards and the originating specification.</p><details class=\"ds-source-locations\"><summary>Source locations (1)</summary><p><strong>Codex · Global</strong><code>/path/to/skills/code-review</code><span>Last seen at the recorded scan time</span></p></details><div class=\"ds-inventory-actions\"><button type=\"button\">Scan to review &amp; import</button></div></article>",
+      "css": ".ds-inventory-row{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;color:var(--ink,#1e2938);background:var(--panel,#fff);padding:20px;border-bottom:1px solid var(--line,#dce2e9)}.ds-inventory-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.ds-inventory-heading>div{min-width:0}.ds-inventory-heading h2{font-size:15px;font-weight:630;margin:0;overflow-wrap:anywhere}.ds-inventory-heading p,.ds-inventory-description{color:var(--muted,#596779);font-size:12px;line-height:1.7;margin:6px 0;overflow-wrap:anywhere}.ds-inventory-tag{flex-shrink:0;font-size:12px;padding:3px 6px;border-radius:4px;background:#e9edf3;color:#4f6075}.ds-source-locations{margin:12px 0;font-size:12px;line-height:1.7;color:var(--muted,#596779)}.ds-source-locations summary{cursor:pointer;min-height:36px;padding:8px 0}.ds-source-locations p{margin:10px 0;overflow-wrap:anywhere}.ds-source-locations code{display:block;font:12px/1.7 ui-monospace,SFMono-Regular,monospace;overflow-wrap:anywhere}.ds-source-locations span{display:block}.ds-inventory-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}.ds-inventory-actions button{font:600 12px -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:transparent;border:0;border-radius:6px;padding:5px 0;color:var(--accent,#294fbd);cursor:pointer}.ds-source-locations summary:focus-visible,.ds-inventory-actions button:focus-visible{outline:2px solid var(--accent,#294fbd);outline-offset:3px}@media(max-width:620px){.ds-inventory-row{padding:16px}.ds-inventory-heading{flex-wrap:wrap}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "",
+    "overview": "An Operate surface: project navigation, searchable skill rows, and an inspection pane, following the user's editor-extension-manager reference. Code-first implementation; no new marketing identity or imagery.",
+    "keyCharacteristics": [
+      "Neutral light editor shell.",
+      "Compact project navigation and skill inspection.",
+      "Explicit per-project enable/disable state."
+    ],
+    "rules": [],
+    "dos": [
+      "Use explicit project scope and saved-state feedback.",
+      "Keep familiar system UI typography and a compact list/detail hierarchy.",
+      "Use visible focus outlines and accessible names for switches, dialogs, and file controls."
+    ],
+    "donts": [
+      "Do not invent marketplace statistics, ratings, or downloads.",
+      "Do not show a saved enabled state before the server saves.",
+      "Do not introduce marketing typography, imagery, or decorative panel shadows."
+    ]
+  }
+}
