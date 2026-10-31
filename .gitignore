@@ -34,3 +34,6 @@ docs/**/INTERVIEW-GUIDE.md
 docs/audit-*/assets/
 *.tgz
 *.zip
+
+# Imported skill content stays local; the shared catalog starts empty.
+library/packages/

@@ -1,15 +1,24 @@
-import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-const source = fileURLToPath(new URL('../library/', import.meta.url));
-const starterIds = new Set(['mattpocock/research','mattpocock/diagnosing-bugs','mattpocock/code-review','pbakaus/impeccable']);
-// Tests exercise a stable starter catalog, independently of owner imports/selections.
-export async function copyStarterLibrary(destination) {
-  const catalog = JSON.parse(await readFile(path.join(source,'catalog.json'),'utf8'));
-  const skills = catalog.skills.filter(x=>starterIds.has(x.skill_id));
-  if(skills.length!==starterIds.size)throw new Error('Starter packages are missing from the development library.');
-  await mkdir(destination,{recursive:true});
-  for(const skill of skills)await cp(path.join(source,skill.package),path.join(destination,skill.package),{recursive:true});
-  await writeFile(path.join(destination,'catalog.json'),JSON.stringify({version:1,skills}));
-  await writeFile(path.join(destination,'projects.json'),JSON.stringify({version:1,projects:[]}));
+
+// Original synthetic data, created only in temporary test directories.
+export async function createFixtureLibrary(destination) {
+  const skills = [];
+  for (const name of ['research', 'diagnosing-bugs', 'code-review', 'design-tool']) {
+    const root = path.join(destination, 'packages', name);
+    await mkdir(root, { recursive: true });
+    await writeFile(path.join(root, 'SKILL.md'), `---\nname: ${name}\ndescription: Synthetic ${name} workflow for integration tests.\n---\nResearch evidence and test the feedback loop.\n`);
+    await writeFile(path.join(root, 'LICENSE'), 'Original synthetic test fixture.\n');
+    if (name === 'diagnosing-bugs') {
+      await mkdir(path.join(root, 'scripts'));
+      await writeFile(path.join(root, 'scripts/hitl-loop.template.sh'), '#!/usr/bin/env bash\n# Synthetic content; tests retrieve this without execution.\n');
+    }
+    if (name === 'design-tool') {
+      await mkdir(path.join(root, 'reference'));
+      await writeFile(path.join(root, 'reference/init.md'), 'Synthetic supporting reference.\n');
+    }
+    skills.push({ skill_id: `fixture/${name}`, package: `packages/${name}`, folder: 'Test collection', standalone: name === 'design-tool', tags: [name], preferred: true, status: 'active', personal_notes: 'Synthetic test data', requirements: [], source: { url: 'local:fixture', path: name } });
+  }
+  await writeFile(path.join(destination, 'catalog.json'), JSON.stringify({ version: 1, skills }));
+  await writeFile(path.join(destination, 'projects.json'), JSON.stringify({ version: 1, projects: [] }));
 }

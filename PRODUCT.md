@@ -24,7 +24,7 @@ A local browser UI beside a coding assistant. The MCP server already exposes fou
 
 - Browse original instructions, supporting files, and GitHub provenance.
 - Create project profiles and switch skills on or off independently.
-- Group multi-skill collections by author: Matt Pocock is a collapsed folder; Impeccable is one standalone skill with one switch. A folder checkbox applies to every member; expansion reveals per-skill overrides. Mixed selection is explicit, and new imports are not automatically enabled.
+- Group imported multi-skill collections by author in collapsed folders; standalone skills have one switch. A fresh clone starts empty. A folder checkbox applies to every member; expansion reveals per-skill overrides. Mixed selection is explicit, and new imports are not automatically enabled.
 - Exclude disabled skills from every project-scoped MCP read, not just the UI.
 - Provide a general MCP setup and usage guide with placeholder examples and troubleshooting, without loading saved project names or paths. Highlight the section being read in the sidebar. Keep working project-specific configurations in the library’s Connect project dialog.
 - Keep globally unscoped connections backward compatible.
@@ -47,7 +47,7 @@ The user requested a VS Code extension-style installation/activation model. Use 
 
 ## Evidence on Hand
 
-Three real Matt Pocock skill packages and the locally installed Impeccable 4.7.0 text snapshot, source URLs (Matt Pocock has a pinned Git revision; Impeccable’s local snapshot commit is unverified), supporting files, and an existing SDK integration-test suite. Do not invent downloads, ratings, reviews, or marketplace statistics.
+No third-party skill packages are bundled. Owners import their own packages with source metadata and supporting files into ignored storage. The public demo uses original synthetic content, and SDK integration tests generate temporary synthetic fixtures. Do not invent downloads, ratings, reviews, or marketplace statistics.
 
 ## Product Principles
 

@@ -1,4 +1,4 @@
-import { copyStarterLibrary } from './fixture-library.mjs';
+import { createFixtureLibrary } from './fixture-library.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, writeFile, cp, rm, symlink } from 'node:fs/promises';
@@ -10,7 +10,7 @@ import { SkillLibrary } from '../dist/library/skill-library.js';
 import { startHttp } from '../dist/http.js';
 async function fixture() {
  const root=await mkdtemp(path.join(os.tmpdir(),'local-scan-test-'));const home=path.join(root,'home'),libraryRoot=path.join(root,'library'),project=path.join(root,'project');
- await mkdir(home);await mkdir(project);await copyStarterLibrary(libraryRoot);
+ await mkdir(home);await mkdir(project);await createFixtureLibrary(libraryRoot);
  const library=await SkillLibrary.load(libraryRoot),scanner=new LocalSkillScanner(home,{});return{root,home,project,library,scanner,async end(){await rm(root,{recursive:true,force:true});}};
 }
 async function skill(parent,name,extra='') {const root=path.join(parent,name);await mkdir(root,{recursive:true});await writeFile(path.join(root,'SKILL.md'),`---\nname: ${name}\ndescription: Test ${name} workflow.\n---\n${extra}Read the reference before making changes.\n`);return root;}

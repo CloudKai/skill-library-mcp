@@ -2,7 +2,7 @@
 
 A small, local library of skills you choose. An AI assistant can search your collection, retrieve a workflow, and read its supporting files through four read-only MCP tools.
 
-**v0.5.0:** a local browser library and marketplace, per-project MCP and managed native activation, four starter skills, stdio and localhost Streamable HTTP, a local importer, and Git-managed curation. Library retrieval requires no AI key. Live skills.sh discovery uses a linked Vercel project’s OIDC identity; no deployment is needed.
+**v0.5.0:** a local browser library and marketplace, per-project MCP and managed native activation, an empty initial collection, stdio and localhost Streamable HTTP, a local importer, and Git-managed curation. Library retrieval requires no AI key. Live skills.sh discovery uses a linked Vercel project’s OIDC identity; no deployment is needed.
 
 ## Open the UI
 
@@ -12,7 +12,7 @@ npm run ui
 
 Open **http://127.0.0.1:3333**. Choose a project in the sidebar, browse the full collection, and turn skills on or off for that project. The Enabled and Not enabled filters separate its selected and available skills. Select a row to inspect its instructions, supporting files, requirements, and GitHub provenance.
 
-**Matt Pocock** is a collapsible collection containing three saved skills. **Impeccable** is one standalone skill with its own switch; its commands are part of that skill. Use the folder checkbox to enable or disable every currently saved skill in that folder, or expand it to choose individual skills. The checkbox shows a minus when only some are enabled; clicking that partial state enables the whole folder. Folder changes are atomic and affect all members, including skills hidden by a search/filter. Adding a skill later does not silently enable it for existing projects.
+Imported collections appear as collapsible folders. Standalone skills have their own switches. A fresh library is empty until you import packages. Use the folder checkbox to enable or disable every currently saved skill in that folder, or expand it to choose individual skills. The checkbox shows a minus when only some are enabled; clicking that partial state enables the whole folder. Folder changes are atomic and affect all members, including skills hidden by a search/filter. Adding a skill later does not silently enable it for existing projects.
 
 Open **MCP setup & usage** in the sidebar (or `/guide.html`) for a general guide with placeholder configuration examples, prompt templates, all four tools, and troubleshooting. It does not load saved project names or local paths; use **Connect project** in the library for working project-specific settings. The guide sidebar highlights the current section while scrolling.
 
@@ -48,7 +48,7 @@ npm run scan-skills -- --skill-directory "/absolute/path/to/custom-skills" --imp
 
 ## Local data and sharing
 
-New imports from the scanner, marketplace and import CLI are stored in `library/.local/catalog.json` and `library/.local/packages/`. The loader merges these with the four shareable starter skills. The entire `.local` directory and `library/projects.json` are ignored by Git. Project settings may contain real directory paths, so keep them local; a fresh clone starts with no project profiles. `library/projects.example.json` provides the empty schema.
+New imports from the scanner, marketplace and import CLI are stored in `library/.local/catalog.json` and `library/.local/packages/`. The shared catalog starts empty; no third-party starter skills are bundled. The entire `.local` directory and `library/projects.json` are ignored by Git. Project settings may contain real directory paths, so keep them local; a fresh clone starts with no project profiles. `library/projects.example.json` provides the empty schema.
 
 The guide always shows generic placeholder examples. The library’s **Connect project** dialog also defaults to examples; explicitly choose **Show local configuration** there to reveal working paths and the selected project ID. Scan previews show source paths needed to inspect your own machine. Do not paste those into public issues or screenshots. Shared examples use `/absolute/path/to/...` placeholders; replace them locally. Scanning makes no network requests, and private package contents are not sent to the discovery provider. Project-enabled MCP skills are intentionally made available to the coding assistant you connect.
 
@@ -103,14 +103,14 @@ npm run build
 npm run demo
 ```
 
-The demo launches a real MCP server as a child process, discovers its tools, searches for a debugging skill, loads the instructions, reads its license from the same revision, and exits. It does not call a model or run the skill's scripts.
+The demo launches a real MCP server as a child process, discovers its tools, searches the isolated synthetic demo collection, loads instructions, reads manifested bytes from the same revision, and exits. It does not call a model or run the skill's scripts.
 
 To browse the actual contents:
 
 ```sh
 npm run browse
 npm run browse -- search "debugging"
-npm run browse -- get mattpocock/research
+npm run browse -- get your-name/your-skill
 npm run validate
 ```
 
@@ -151,7 +151,7 @@ Then ask:
 
 Or:
 
-> List my saved skills. Use mattpocock/research to investigate this API and save a cited report.
+> List my saved skills, then choose an imported workflow that fits this task.
 
 The assistant needs its own web, file, shell, or subagent capabilities to perform a skill. The MCP tools supply instructions and packaged files. Optional native copies are configured explicitly through the owner UI; they do not supply missing agent capabilities or run setup scripts.
 
@@ -172,17 +172,11 @@ npm run http
 
 HTTP is stateless: each POST gets a fresh protocol transport over the current catalog snapshot, with live project-selection filtering when configured. There is no persistent GET stream. The test suite checks a real MCP SDK client against both transports. The owner-side UI API imports packages, writes project profiles and manages explicitly configured native copies; MCP tools remain read-only. UI changes require a same-origin write token and are saved atomically with conflict checks.
 
-## Included collection
+## Initial collection
 
-| Skill ID | Use | Known requirements |
-| --- | --- | --- |
-| `mattpocock/research` | Primary-source research saved as cited Markdown. | Web access, filesystem, subagents. |
-| `mattpocock/diagnosing-bugs` | Reproduction-first debugging and verification. | Shell, filesystem, suitable project runtime. |
-| `mattpocock/code-review` | Review standards and specification separately. | Git/shell, filesystem, subagents; may require tracker setup. |
+A fresh clone starts with zero saved skills. Import a package through the local scanner, marketplace or import command before enabling it for a project. Imported package bytes stay in ignored `library/.local/` storage. The synthetic `demo-library/` exists only for demonstration; tests generate their own small synthetic fixtures in temporary directories.
 
-These are verbatim copies of the installed Matt Pocock plugin snapshot, including its supporting files, with the upstream MIT license included in each package. The catalog records upstream commit `5beb35b040e3de97e54fa9e386d7e42d15c295c2` and bundle version `1.3.1`. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-
-Requirements are curator notes, not a complete dependency resolver. Some skill instructions reference other skills or project setup that is not bundled in this curated MVP. An assistant should report a missing dependency or use an explicitly adapted skill; retrieving instructions does not make every workflow runnable in every host.
+Requirements are curator notes, not a complete dependency resolver. Retain package licenses and supporting files when importing skills; retrieving instructions does not make every workflow runnable in every host.
 
 ## Add a skill you like
 
@@ -250,13 +244,9 @@ The SDK v1 compatibility interface is intentionally used for this local MVP. The
 
 The package version and CHANGELOG.md track releases. Use feature branches and conventional commit messages, run `npm test` and `npm run validate`, then tag a verified release with its matching semantic version. Tags are local until explicitly pushed. Existing user editor files remain outside the feature commits.
 
-### Impeccable package
-
-The saved Impeccable 4.7.0 text snapshot includes its original instructions, references, script sources, Apache-2.0 license, and third-party notices. The platform engine binary is excluded; helper-dependent commands require a compatible local engine. Its upstream commit has not been verified, so its GitHub link opens the source repository instead of claiming a pinned commit. See `library/packages/impeccable/PACKAGE-NOTE.md`.
-
 ## Source repository
 
-The public source includes application code, tests, documentation and npm manifests. Dependencies are installed locally with `npm ci`; `node_modules`, generated builds, environment files, local editor settings and private runtime data are excluded from Git. CI runs type checking and the test suite on Node.js 24. See [contributing](CONTRIBUTING.md) for the branch and commit workflow.
+The public source includes application code, tests, documentation and npm manifests. Dependencies are installed locally with `npm ci`; `node_modules`, generated builds, environment files, local editor settings and private runtime data are excluded from Git. CI defines type checking and the test suite on Node.js 22/24 for Linux/macOS. See [contributing](CONTRIBUTING.md) for the branch and commit workflow.
 
 ## Local maintenance and release controls
 

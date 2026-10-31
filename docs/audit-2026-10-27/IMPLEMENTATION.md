@@ -71,3 +71,9 @@ Final verification on 31 October 2026:
 - `git diff --check`: passed. Remote CI, real coding hosts and live providers were not exercised by this run.
 
 The interview guide is maintained separately on the owner’s Desktop and is excluded from this repository. Earlier totals in the audit describe the earlier pass.
+
+## Source-only distribution cleanup — 31 October 2026
+
+Bundled third-party starter packages have been removed. The shared catalog is empty on a fresh clone. Existing ignored imports and project files remain local; a profile referencing a removed starter requires importing that skill again before it is available. Tests now generate original synthetic packages in temporary directories, independently of the owner’s library. The CLI walkthrough uses the isolated synthetic demo collection. Screenshot captures and generated build/dependency folders are excluded from the distributed source. Earlier catalog/test counts above are historical results from before this cleanup.
+
+Cleanup verification: `npm run check` passed; `npm test` passed all 82 tests after replacing the remaining starter-specific test URL; `npm run demo` completed retrieval over real stdio using synthetic demo data. Generated `dist/` and `node_modules/` were removed again after verification.

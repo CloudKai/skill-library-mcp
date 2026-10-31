@@ -1,2 +1,0 @@
-# Saved third-party packages retain their upstream bytes, including whitespace.
-library/packages/** -whitespace

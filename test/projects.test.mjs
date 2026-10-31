@@ -1,4 +1,4 @@
-import { copyStarterLibrary } from './fixture-library.mjs';
+import { createFixtureLibrary } from './fixture-library.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -14,7 +14,7 @@ import { startHttp } from '../dist/http.js';
 
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'skill-project-test-'));
-  await copyStarterLibrary(root);
+  await createFixtureLibrary(root);
   const library = await SkillLibrary.load(root);
   return { root, library, projects: new ProjectStore(library) };
 }
@@ -25,10 +25,10 @@ test('projects persist independently and reject stale selection writes', async (
     const a = await projects.create({ name: 'Project A', path: '/example/a' });
     const b = await projects.create({ name: 'Project B', path: '' });
     assert.deepEqual(a.enabled_skills, []);
-    const updated = await projects.toggle(a.id, { skill_id: 'mattpocock/research', enabled: true, expected_revision: a.revision });
-    assert.deepEqual((await new ProjectStore(library).get(a.id)).enabled_skills, ['mattpocock/research']);
+    const updated = await projects.toggle(a.id, { skill_id: 'fixture/research', enabled: true, expected_revision: a.revision });
+    assert.deepEqual((await new ProjectStore(library).get(a.id)).enabled_skills, ['fixture/research']);
     assert.deepEqual((await projects.get(b.id)).enabled_skills, []);
-    await assert.rejects(projects.toggle(a.id, { skill_id: 'mattpocock/code-review', enabled: true, expected_revision: a.revision }), { code: 'REVISION_CONFLICT' });
+    await assert.rejects(projects.toggle(a.id, { skill_id: 'fixture/code-review', enabled: true, expected_revision: a.revision }), { code: 'REVISION_CONFLICT' });
     assert.notEqual(a.revision, updated.revision);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -37,13 +37,13 @@ test('disabled skills are absent from search/list and cannot be retrieved by ID 
   const { root, projects } = await fixture();
   try {
     const project = await projects.create({ name: 'Scoped', path: '' });
-    const selected = await projects.toggle(project.id, { skill_id: 'mattpocock/research', enabled: true, expected_revision: project.revision });
+    const selected = await projects.toggle(project.id, { skill_id: 'fixture/research', enabled: true, expected_revision: project.revision });
     const scoped = await projects.scope(project.id);
-    assert.deepEqual(scoped.list({}).skills.map(s => s.skill_id), ['mattpocock/research']);
+    assert.deepEqual(scoped.list({}).skills.map(s => s.skill_id), ['fixture/research']);
     assert.equal(scoped.search({ query: 'debugging' }).matches.length, 0);
-    assert.throws(() => scoped.get('mattpocock/diagnosing-bugs'), { code: 'SKILL_NOT_FOUND' });
-    assert.throws(() => scoped.read('mattpocock/diagnosing-bugs', 'anything', 'SKILL.md'), { code: 'SKILL_NOT_FOUND' });
-    await projects.toggle(project.id, { skill_id: 'mattpocock/research', enabled: false, expected_revision: selected.revision });
+    assert.throws(() => scoped.get('fixture/diagnosing-bugs'), { code: 'SKILL_NOT_FOUND' });
+    assert.throws(() => scoped.read('fixture/diagnosing-bugs', 'anything', 'SKILL.md'), { code: 'SKILL_NOT_FOUND' });
+    await projects.toggle(project.id, { skill_id: 'fixture/research', enabled: false, expected_revision: selected.revision });
     assert.equal((await projects.scope(project.id)).list({}).skills.length, 0);
     await assert.rejects(projects.scope('missing-project'), { code: 'PROJECT_NOT_FOUND' });
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -54,21 +54,21 @@ test('folder activation changes all members atomically and preserves other folde
   try {
     const catalogPath = path.join(root, 'catalog.json');
     const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
-    catalog.skills.find(s => s.skill_id === 'mattpocock/code-review').folder = 'Project skills';
+    catalog.skills.find(s => s.skill_id === 'fixture/code-review').folder = 'Project skills';
     await writeFile(catalogPath, JSON.stringify(catalog));
     const library = await SkillLibrary.load(root);
     const projects = new ProjectStore(library);
     const project = await projects.create({ name: 'Folder test', path: '' });
-    let updated = await projects.toggle(project.id, { skill_id: 'mattpocock/code-review', enabled: true, expected_revision: project.revision });
-    updated = await projects.toggleFolder(project.id, { folder: 'Matt Pocock', enabled: true, expected_revision: updated.revision });
+    let updated = await projects.toggle(project.id, { skill_id: 'fixture/code-review', enabled: true, expected_revision: project.revision });
+    updated = await projects.toggleFolder(project.id, { folder: 'Test collection', enabled: true, expected_revision: updated.revision });
     assert.equal(updated.enabled_skills.length, 3);
     const beforeDisable = updated.revision;
-    updated = await projects.toggleFolder(project.id, { folder: 'Matt Pocock', enabled: false, expected_revision: updated.revision });
-    assert.deepEqual(updated.enabled_skills, ['mattpocock/code-review']);
-    assert.deepEqual((await projects.scope(project.id)).list({}).skills.map(s => s.skill_id), ['mattpocock/code-review']);
-    await assert.rejects(projects.toggleFolder(project.id, { folder: 'Matt Pocock', enabled: true, expected_revision: beforeDisable }), { code: 'REVISION_CONFLICT' });
+    updated = await projects.toggleFolder(project.id, { folder: 'Test collection', enabled: false, expected_revision: updated.revision });
+    assert.deepEqual(updated.enabled_skills, ['fixture/code-review']);
+    assert.deepEqual((await projects.scope(project.id)).list({}).skills.map(s => s.skill_id), ['fixture/code-review']);
+    await assert.rejects(projects.toggleFolder(project.id, { folder: 'Test collection', enabled: true, expected_revision: beforeDisable }), { code: 'REVISION_CONFLICT' });
     await assert.rejects(projects.toggleFolder(project.id, { folder: 'Missing', enabled: true, expected_revision: updated.revision }), { code: 'FOLDER_NOT_FOUND' });
-    assert.deepEqual((await projects.get(project.id)).enabled_skills, ['mattpocock/code-review']);
+    assert.deepEqual((await projects.get(project.id)).enabled_skills, ['fixture/code-review']);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -79,10 +79,10 @@ test('running stdio connection picks up project toggles without falling back to 
     const project = await projects.create({ name: 'Live connection', path: '' });
     await client.connect(new StdioClientTransport({ command: process.execPath, args: [fileURLToPath(new URL('../dist/stdio.js', import.meta.url))], env: { ...process.env, SKILL_LIBRARY_DIR: root, SKILL_LIBRARY_PROJECT: project.id }, stderr: 'pipe' }));
     assert.equal((await client.callTool({ name: 'list_skills', arguments: {} })).structuredContent.skills.length, 0);
-    const updated = await projects.toggle(project.id, { skill_id: 'mattpocock/research', enabled: true, expected_revision: project.revision });
-    assert.equal((await client.callTool({ name: 'get_skill', arguments: { skill_id: 'mattpocock/research' } })).isError, undefined);
-    await projects.toggle(project.id, { skill_id: 'mattpocock/research', enabled: false, expected_revision: updated.revision });
-    const disabled = await client.callTool({ name: 'get_skill', arguments: { skill_id: 'mattpocock/research' } });
+    const updated = await projects.toggle(project.id, { skill_id: 'fixture/research', enabled: true, expected_revision: project.revision });
+    assert.equal((await client.callTool({ name: 'get_skill', arguments: { skill_id: 'fixture/research' } })).isError, undefined);
+    await projects.toggle(project.id, { skill_id: 'fixture/research', enabled: false, expected_revision: updated.revision });
+    const disabled = await client.callTool({ name: 'get_skill', arguments: { skill_id: 'fixture/research' } });
     assert.equal(disabled.isError, true);
     assert.equal(disabled.structuredContent.error.code, 'SKILL_NOT_FOUND');
   } finally { await client.close(); await rm(root, { recursive: true, force: true }); }
@@ -117,22 +117,22 @@ test('UI project API requires a write token, serves connection settings, and sco
     assert.match(connection.example.toml, /absolute\/path\/to/);
     await client.connect(new StreamableHTTPClientTransport(new URL(base + connection.http_path)));
     assert.equal((await client.callTool({ name: 'list_skills', arguments: {} })).structuredContent.skills.length, 0);
-    const updated = await fetch(`${base}/api/projects/${project.id}/skills`, { method: 'PATCH', headers, body: JSON.stringify({ skill_id: 'mattpocock/code-review', enabled: true, expected_revision: project.revision }) });
+    const updated = await fetch(`${base}/api/projects/${project.id}/skills`, { method: 'PATCH', headers, body: JSON.stringify({ skill_id: 'fixture/code-review', enabled: true, expected_revision: project.revision }) });
     assert.equal(updated.status, 200);
     const result = await client.callTool({ name: 'list_skills', arguments: {} });
-    assert.deepEqual(result.structuredContent.skills.map(s => s.skill_id), ['mattpocock/code-review']);
-    const hidden = await client.callTool({ name: 'get_skill', arguments: { skill_id: 'mattpocock/research' } });
+    assert.deepEqual(result.structuredContent.skills.map(s => s.skill_id), ['fixture/code-review']);
+    const hidden = await client.callTool({ name: 'get_skill', arguments: { skill_id: 'fixture/research' } });
     assert.equal(hidden.isError, true);
-    assert.equal((await fetch(`${base}/api/skill?id=mattpocock%2Fresearch`)).status, 200); // Owner still sees the whole library.
-    const conflict = await fetch(`${base}/api/projects/${project.id}/skills`, { method: 'PATCH', headers, body: JSON.stringify({ skill_id: 'mattpocock/research', enabled: true, expected_revision: project.revision }) });
+    assert.equal((await fetch(`${base}/api/skill?id=fixture%2Fresearch`)).status, 200); // Owner still sees the whole library.
+    const conflict = await fetch(`${base}/api/projects/${project.id}/skills`, { method: 'PATCH', headers, body: JSON.stringify({ skill_id: 'fixture/research', enabled: true, expected_revision: project.revision }) });
     assert.equal(conflict.status, 409);
     const current = await updated.json();
-    const bulk = await fetch(`${base}/api/projects/${project.id}/folder`, { method: 'PATCH', headers, body: JSON.stringify({ folder: 'Matt Pocock', enabled: true, expected_revision: current.revision }) });
+    const bulk = await fetch(`${base}/api/projects/${project.id}/folder`, { method: 'PATCH', headers, body: JSON.stringify({ folder: 'Test collection', enabled: true, expected_revision: current.revision }) });
     assert.equal(bulk.status, 200);
     const all = await bulk.json();
     assert.equal(all.enabled_skills.length, 3);
     assert.equal((await client.callTool({ name: 'list_skills', arguments: {} })).structuredContent.skills.length, 3);
-    const cleared = await fetch(`${base}/api/projects/${project.id}/folder`, { method: 'PATCH', headers, body: JSON.stringify({ folder: 'Matt Pocock', enabled: false, expected_revision: all.revision }) });
+    const cleared = await fetch(`${base}/api/projects/${project.id}/folder`, { method: 'PATCH', headers, body: JSON.stringify({ folder: 'Test collection', enabled: false, expected_revision: all.revision }) });
     assert.equal(cleared.status, 200);
     assert.equal((await client.callTool({ name: 'list_skills', arguments: {} })).structuredContent.skills.length, 0);
     assert.equal((await fetch(`${base}/mcp?project=missing-project`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 404);
@@ -144,20 +144,20 @@ test('standalone skills have their own activation and are excluded from collecti
   try {
     const file = path.join(root, 'catalog.json');
     const catalog = JSON.parse(await readFile(file, 'utf8'));
-    const impeccable = catalog.skills.find(s => s.skill_id === 'pbakaus/impeccable');
-    assert.equal(impeccable.standalone, true);
-    impeccable.folder = 'Matt Pocock'; // Sharing a label does not turn a standalone skill into a member.
+    const designTool = catalog.skills.find(s => s.skill_id === 'fixture/design-tool');
+    assert.equal(designTool.standalone, true);
+    designTool.folder = 'Test collection'; // Sharing a label does not turn a standalone skill into a member.
     await writeFile(file, JSON.stringify(catalog));
     const library = await SkillLibrary.load(root);
     const projects = new ProjectStore(library);
     const project = await projects.create({ name: 'Independent standalone', path: '' });
-    let updated = await projects.toggleFolder(project.id, { folder: 'Matt Pocock', enabled: true, expected_revision: project.revision });
+    let updated = await projects.toggleFolder(project.id, { folder: 'Test collection', enabled: true, expected_revision: project.revision });
     assert.equal(updated.enabled_skills.length, 3);
-    assert.equal(updated.enabled_skills.includes('pbakaus/impeccable'), false);
-    updated = await projects.toggle(project.id, { skill_id: 'pbakaus/impeccable', enabled: true, expected_revision: updated.revision });
-    updated = await projects.toggleFolder(project.id, { folder: 'Matt Pocock', enabled: false, expected_revision: updated.revision });
-    assert.deepEqual(updated.enabled_skills, ['pbakaus/impeccable']);
-    const skill = (await projects.scope(project.id)).get('pbakaus/impeccable');
+    assert.equal(updated.enabled_skills.includes('fixture/design-tool'), false);
+    updated = await projects.toggle(project.id, { skill_id: 'fixture/design-tool', enabled: true, expected_revision: updated.revision });
+    updated = await projects.toggleFolder(project.id, { folder: 'Test collection', enabled: false, expected_revision: updated.revision });
+    assert.deepEqual(updated.enabled_skills, ['fixture/design-tool']);
+    const skill = (await projects.scope(project.id)).get('fixture/design-tool');
     assert.equal(skill.standalone, true);
     assert.ok(skill.manifest.some(f => f.path === 'reference/init.md'));
     assert.ok(skill.manifest.some(f => f.path === 'LICENSE'));
@@ -183,7 +183,7 @@ test('local setup check runs a real scoped stdio client without changing project
     assert.equal(empty.retrieval_checked, false);
     assert.equal(empty.disabled_skill_checked, true);
     assert.equal(empty.external_client_verified, false);
-    const update = await fetch(`${base}/api/projects/${project.id}/skills`, { method: 'PATCH', headers, body: JSON.stringify({ skill_id: 'mattpocock/research', enabled: true, expected_revision: project.revision }) });
+    const update = await fetch(`${base}/api/projects/${project.id}/skills`, { method: 'PATCH', headers, body: JSON.stringify({ skill_id: 'fixture/research', enabled: true, expected_revision: project.revision }) });
     const selected = await update.json();
     assert.equal((await check(project.revision)).status, 409);
     const before = await readFile(path.join(root, 'projects.json'), 'utf8');

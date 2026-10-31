@@ -58,7 +58,7 @@ Retrieve one skill's original `SKILL.md` plus its full supporting-file inventory
 | `revision` — string | No | Current startup snapshot; max 128 chars |
 
 ```json
-{"skill_id":"mattpocock/diagnosing-bugs"}
+{"skill_id":"your-name/your-skill"}
 ```
 
 Output includes the summary fields plus `skill_uri`, `frontmatter`, `instructions`, `manifest`, `source`, `personal_notes`, and `activation_note`. Original frontmatter is preserved. Manifest entries contain `path`, `uri`, `sha256`, `size_bytes`, and `mime_type`. Source metadata records the upstream repository path/commit for bundled skills.
@@ -80,7 +80,7 @@ Read one supporting file from the exact snapshot selected above.
 Example: copy the actual revision from `get_skill` before calling:
 
 ```json
-{"skill_id":"mattpocock/diagnosing-bugs","revision":"<revision-from-get_skill>","path":"scripts/hitl-loop.template.sh"}
+{"skill_id":"your-name/your-skill","revision":"<revision-from-get_skill>","path":"references/checklist.md"}
 ```
 
 Output: `{skill_id, revision, path, uri, mime_type, size_bytes, sha256, encoding, content}`. Text returns `encoding: "utf-8"`; binary bytes return `encoding: "base64"`. The file checksum is checked before return. A shell script is returned as content, never executed.

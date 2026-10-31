@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, writeFile, rm, cp, realpath } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { copyStarterLibrary } from './fixture-library.mjs';
+import { createFixtureLibrary } from './fixture-library.mjs';
 import { LocalInventory } from '../dist/local-skills/inventory.js';
 import { LocalSkillScanner, scanSchema } from '../dist/local-skills/scanner.js';
 import { SkillLibrary } from '../dist/library/skill-library.js';
 import { startHttp } from '../dist/http.js';
 async function fixture() {
- const root=await mkdtemp(path.join(os.tmpdir(),'inventory-test-'));const home=path.join(root,'home'),directory=path.join(root,'library');await mkdir(home);await copyStarterLibrary(directory);return {root,home,directory,library:await SkillLibrary.load(directory),scanner:new LocalSkillScanner(home,{}),async end(){await rm(root,{recursive:true,force:true});}};
+ const root=await mkdtemp(path.join(os.tmpdir(),'inventory-test-'));const home=path.join(root,'home'),directory=path.join(root,'library');await mkdir(home);await createFixtureLibrary(directory);return {root,home,directory,library:await SkillLibrary.load(directory),scanner:new LocalSkillScanner(home,{}),async end(){await rm(root,{recursive:true,force:true});}};
 }
 async function skill(parent,name) {const directory=path.join(parent,name);await mkdir(directory,{recursive:true});await writeFile(path.join(directory,'SKILL.md'),`---\nname: ${name}\ndescription: Example ${name} workflow.\n---\nInstructions.\n`);return directory;}
 const input = args => scanSchema.parse(args||{});

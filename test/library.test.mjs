@@ -1,3 +1,4 @@
+import { createFixtureLibrary } from './fixture-library.mjs';
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
@@ -134,8 +135,11 @@ test('local import copies complete packages and rejects duplicate IDs', async ()
   } finally { await rm(importedRoot, { recursive: true, force: true }); }
 });
 
-test('cursors are bound to filters and catalog snapshots', async () => {
-  const seeded = await SkillLibrary.load();
+test('cursors are bound to filters and catalog snapshots', async (t) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'cursor-fixture-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  await createFixtureLibrary(directory);
+  const seeded = await SkillLibrary.load(directory);
   const page1 = seeded.list({ limit: 1 });
   assert.ok(page1.next_cursor);
   const page2 = seeded.list({ limit: 1, cursor: page1.next_cursor });
