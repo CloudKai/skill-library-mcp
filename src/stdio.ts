@@ -1,7 +1,7 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { SkillLibrary } from './library.js';
-import { createServer } from './server.js';
-import { ProjectStore } from './projects.js';
+import { SkillLibrary } from './library/skill-library.js';
+import { createServer } from './mcp/server.js';
+import { ProjectStore } from './projects/project-store.js';
 
 try {
   const library = await SkillLibrary.load(process.env.SKILL_LIBRARY_DIR);

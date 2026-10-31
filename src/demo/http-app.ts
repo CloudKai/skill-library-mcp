@@ -1,16 +1,17 @@
 import express from 'express';
-import { fileURLToPath } from 'node:url';
+import { demoLibrary, publicDirectory } from '../shared/paths.js';
 import { z } from 'zod';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { SkillLibrary, LibraryError } from './library.js';
-import { createServer } from './server.js';
-import { detailSchema, MarketplaceClient } from './marketplace.js';
-import { sampleProjects, sampleInventory } from './demo-data.js';
-import { version } from './version.js';
+import { SkillLibrary } from '../library/skill-library.js';
+import { LibraryError } from '../shared/library-error.js';
+import { createServer } from '../mcp/server.js';
+import { detailSchema, MarketplaceClient } from '../marketplace/client.js';
+import { sampleProjects, sampleInventory } from './data.js';
+import { version } from '../shared/version.js';
 
 /** Separate cloud entry point. Never loads owner catalogs, profiles, inventory or native destinations. */
 export function createDemoApp(market = new MarketplaceClient(process.env.SKILL_MARKETPLACE_URL, { hosted:true,serviceToken:process.env.MARKETPLACE_SERVICE_TOKEN }), providedLibrary?: SkillLibrary) {
-  const library = providedLibrary ? Promise.resolve(providedLibrary) : SkillLibrary.load(fileURLToPath(new URL('../demo-library/', import.meta.url)));
+  const library = providedLibrary ? Promise.resolve(providedLibrary) : SkillLibrary.load(demoLibrary);
   const app = express(); app.disable('x-powered-by'); app.use(express.json({ limit:'32kb' }));
   app.use((_req,res,next) => { res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");next(); });
   app.get('/health',async (_req,res) => res.json({status:'ok',mode:'demo',...(await library).stats()}));
@@ -41,7 +42,7 @@ export function createDemoApp(market = new MarketplaceClient(process.env.SKILL_M
     await server.connect(transport);await transport.handleRequest(req,res,req.body);
   });
   app.all('/mcp',(_req,res)=>{res.setHeader('Allow','POST');res.status(405).json({error:'Use POST for stateless MCP requests.'});});
-  app.use(express.static(fileURLToPath(new URL('../public/',import.meta.url))));
+  app.use(express.static(publicDirectory));
   app.use((error:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{const code=error instanceof LibraryError?error.code:error instanceof z.ZodError?'INVALID_INPUT':'INTERNAL_ERROR';res.status(code==='RATE_LIMITED'?429:code==='INVALID_INPUT'?400:code==='PROJECT_NOT_FOUND'?404:503).json({error:{code,message:error instanceof LibraryError?error.message:code==='INVALID_INPUT'?'Check the request values.':'The demo could not complete this request. Please retry shortly.'}});});
   return app;
 }

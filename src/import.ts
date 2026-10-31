@@ -1,7 +1,8 @@
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { defaultLibrary, readPackage } from './library.js';
-import { importPackage } from './import-package.js';
+import { readPackage } from './library/skill-library.js';
+import { defaultLibrary } from './shared/paths.js';
+import { importPackage } from './library/import-package.js';
 try {
   const { values } = parseArgs({ options: { from: { type: 'string' }, id: { type: 'string' }, folder: { type: 'string' }, standalone: { type: 'boolean' }, tags: { type: 'string' }, requirements: { type: 'string' }, notes: { type: 'string' }, 'source-url': { type: 'string' }, commit: { type: 'string' }, help: { type: 'boolean' } } });
   if (values.help) console.log('Usage: npm run import-skill -- --from /absolute/path/skill-name --id author/skill-name [--folder "Collection name"] [--standalone] [--tags research,docs] [--requirements shell,web] [--notes "Why I like it"] [--source-url URL] [--commit SHA]');

@@ -2,6 +2,8 @@
 
 Use Node.js 24 and npm. Install dependencies with `npm ci`, then run `npm run check` and `npm test` before opening a pull request. Tests use local fixtures; no provider credentials are required.
 
+See [Source architecture](docs/architecture.md) for feature folders, class responsibilities and executable entrypoints.
+
 Create a feature branch from `main`. Use conventional commits such as `feat:`, `fix:`, `docs:` and `chore:`. Keep changes focused and describe the resulting behavior and verification in the pull request.
 
 Commit source, tests, documentation, `package.json` and `package-lock.json`. Keep the lockfile so installs are reproducible. Never commit `node_modules/`, `dist/`, coverage, logs, local editor settings, `.vercel/`, environment files or credentials. Use `.env.example` for documented placeholders only.

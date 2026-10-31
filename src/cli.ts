@@ -1,6 +1,6 @@
-import { SkillLibrary } from './library.js';
-import { callTool } from './server.js';
-import { ProjectStore } from './projects.js';
+import { SkillLibrary } from './library/skill-library.js';
+import { callTool } from './mcp/server.js';
+import { ProjectStore } from './projects/project-store.js';
 
 try {
   const baseLibrary = await SkillLibrary.load(process.env.SKILL_LIBRARY_DIR);

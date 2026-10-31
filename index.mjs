@@ -1,5 +1,5 @@
 import express from 'express';
-import { createDemoApp } from './dist/demo-http.js';
+import { createDemoApp } from './dist/demo/http-app.js';
 const app = express();
 app.use(createDemoApp());
 export default app;

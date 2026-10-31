@@ -26,3 +26,11 @@ library/projects.json
 outputs/
 *.log
 *.tsbuildinfo
+
+# Personal interview preparation stays outside PRs.
+docs/**/INTERVIEW-GUIDE.md
+
+# Local audit captures and packaged build outputs are not development source.
+docs/audit-*/assets/
+*.tgz
+*.zip

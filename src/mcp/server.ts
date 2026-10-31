@@ -1,7 +1,8 @@
-import { version } from './version.js';
+import { version } from '../shared/version.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { LibraryError, SkillLibrary } from './library.js';
+import { SkillLibrary } from '../library/skill-library.js';
+import { LibraryError } from '../shared/library-error.js';
 
 const tags = z.array(z.string().min(1).max(64)).max(30).optional();
 export const schemas = {

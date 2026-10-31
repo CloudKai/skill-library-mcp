@@ -4,9 +4,9 @@ import { mkdtemp, mkdir, readFile, writeFile, rm, cp, realpath } from 'node:fs/p
 import os from 'node:os';
 import path from 'node:path';
 import { copyStarterLibrary } from './fixture-library.mjs';
-import { LocalInventory } from '../dist/local-inventory.js';
-import { LocalSkillScanner, scanSchema } from '../dist/local-skills.js';
-import { SkillLibrary } from '../dist/library.js';
+import { LocalInventory } from '../dist/local-skills/inventory.js';
+import { LocalSkillScanner, scanSchema } from '../dist/local-skills/scanner.js';
+import { SkillLibrary } from '../dist/library/skill-library.js';
 import { startHttp } from '../dist/http.js';
 async function fixture() {
  const root=await mkdtemp(path.join(os.tmpdir(),'inventory-test-'));const home=path.join(root,'home'),directory=path.join(root,'library');await mkdir(home);await copyStarterLibrary(directory);return {root,home,directory,library:await SkillLibrary.load(directory),scanner:new LocalSkillScanner(home,{}),async end(){await rm(root,{recursive:true,force:true});}};

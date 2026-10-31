@@ -352,3 +352,25 @@ kbd { position: absolute; right: 10px; font: 12px inherit; color: var(--muted); 
 @media (max-width: 620px) { .inventory-toolbar, .inventory-row { padding: 16px; } .inventory-row-heading { flex-wrap: wrap; } }
 
 .demo-banner { margin: 0 0 24px; padding: 12px 16px; background: var(--accent-soft); color: var(--ink); border-radius: 6px; font-size: 12px; line-height: 1.7; }
+
+.setup-empty ol { max-width: 30ch; padding-inline-start: 20px; text-align: left; font-size: 13px; line-height: 1.7; color: var(--muted); }
+.setup-empty li + li { margin-top: 8px; }
+.setup-empty .button { margin-top: 16px; }
+.connection-check { margin-top: 20px; padding-block: 16px; border-block: 1px solid var(--line); }
+.connection-check .field-help { margin-bottom: 0; }
+.connection-check-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.settings-workspace { max-width: 1100px; }
+.settings-section { padding-block: 24px; border-bottom: 1px solid var(--line); max-width: 76ch; line-height: 1.7; }
+.settings-section h2 { font-size: 19px; margin: 0 0 16px; }
+.settings-section h3 { font-size: 14px; margin: 24px 0 12px; }
+.settings-section label:not(.settings-checkbox) { display: block; margin: 16px 0 6px; font-weight: 600; font-size: 13px; }
+.settings-section input:not([type="checkbox"]), .settings-section select, .settings-section textarea { width: 100%; min-height: 40px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); font: inherit; box-sizing: border-box; }
+.settings-checkbox { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 13px; }
+.settings-checkbox input { width: 18px; height: 18px; accent-color: var(--accent); }
+.settings-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.settings-status { position: sticky; top: 64px; background: var(--panel); padding: 12px 16px; border: 1px solid var(--line); z-index: 2; line-height: 1.7; overflow-wrap: anywhere; }
+.native-plan { margin-top: 16px; padding: 12px; background: var(--canvas); overflow-wrap: anywhere; font-size: 12px; line-height: 1.7; }
+.detail-advanced { margin-block: 20px; font-size: 12px; color: var(--muted); }
+.detail-advanced summary { min-height: 36px; padding-block: 8px; cursor: pointer; }
+.list-footer { flex-wrap: wrap; gap: 10px; }
+@media (max-height: 800px) { #connect-dialog .connection-code { max-height: 150px; } }

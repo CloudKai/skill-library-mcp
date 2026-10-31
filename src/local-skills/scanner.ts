@@ -4,9 +4,11 @@ import { randomUUID } from 'node:crypto';
 import { lstat, readdir, readFile, realpath, mkdir, mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { parse as parseToml } from 'smol-toml';
 import { z } from 'zod';
-import { hash, LibraryError, parseSkill, readPackage, SkillLibrary, type Entry } from './library.js';
-import { LocalInventory } from './local-inventory.js';
-import { importPackage } from './import-package.js';
+import { parseSkill, readPackage, SkillLibrary, type Entry } from '../library/skill-library.js';
+import { hash } from '../shared/hash.js';
+import { LibraryError } from '../shared/library-error.js';
+import { LocalInventory } from './inventory.js';
+import { importPackage } from '../library/import-package.js';
 
 export const platforms = ['shared', 'codex', 'claude-code', 'cursor', 'opencode'] as const;
 const directory = z.string().trim().min(1).max(2048).refine(path.isAbsolute, 'Use an absolute directory path.');

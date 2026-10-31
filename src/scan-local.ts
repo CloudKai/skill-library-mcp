@@ -1,7 +1,7 @@
 import { parseArgs } from 'node:util';
-import { LocalSkillScanner, scanSchema } from './local-skills.js';
-import { SkillLibrary } from './library.js';
-import { ProjectStore } from './projects.js';
+import { LocalSkillScanner, scanSchema } from './local-skills/scanner.js';
+import { SkillLibrary } from './library/skill-library.js';
+import { ProjectStore } from './projects/project-store.js';
 try {
   const { values } = parseArgs({ options: { 'import-all': { type: 'boolean' }, scope: { type: 'string' }, 'project-directory': { type: 'string', multiple: true }, 'skill-directory': { type: 'string', multiple: true }, 'include-cached': { type: 'boolean' } } });
   const library = await SkillLibrary.load(process.env.SKILL_LIBRARY_DIR);

@@ -27,7 +27,9 @@ const detailCache = new Map();
 let detailRequest = 0;
 let toastTimer;
 let connection;
+let connectionRequest = 0;
 let focusIntent = null;
+let lastSelection = null;
 const currentProject = () => state.projects.find(p => p.id === state.projectId);
 const title = (skill) => skill.name.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
 const emblem = (skill) => icon(skill.name.includes('bug') ? 'bug' : skill.name.includes('review') ? 'review' : 'document');
@@ -55,7 +57,7 @@ function restoreFocus(region) {
 }
 
 async function api(url, options = {}) {
-  const response = await fetch(url, { ...options, headers: { ...(options.body ? { 'Content-Type': 'application/json', 'X-Skill-Library-Token': state.csrf } : {}), ...options.headers } });
+  const response = await fetch(url, { ...options, headers: { ...(state.csrf ? { 'X-Skill-Library-Token': state.csrf } : {}), ...(options.body ? { 'Content-Type': 'application/json', 'X-Skill-Library-Token': state.csrf } : {}), ...options.headers } });
   let data;
   try { data = await response.json(); } catch { throw new Error('The library returned an unreadable response. Refresh and try again.'); }
   if (!response.ok) throw new Error(data.error?.message || 'The library could not complete this request.');
@@ -147,7 +149,7 @@ function renderNavigation() {
 }
 function skillRow(skill, project) {
   return `<article class="skill-row ${skill.skill_id === state.selected ? 'selected' : ''}">
-      <button class="skill-content" type="button" data-select="${escape(skill.skill_id)}" aria-pressed="${skill.skill_id === state.selected}"><span class="skill-emblem">${emblem(skill)}</span><span class="skill-text"><span class="skill-title">${escape(title(skill))}</span><span class="skill-author">${escape(skill.skill_id.split('/')[0])}${skill.standalone ? ' · Standalone skill' : ''}</span><span class="skill-description">${escape(skill.description)}</span><span class="skill-tags">${skillOrigins(state.inventory, skill.skill_id).length ? `<span class="tag">${escape(sourceSummary(skillOrigins(state.inventory, skill.skill_id)))}</span>` : ''}${skill.tags.map(tag => `<span class="tag">${escape(tag)}</span>`).join('')}</span></span></button>
+      <button class="skill-content" type="button" data-select="${escape(skill.skill_id)}" aria-label="Inspect ${escape(title(skill))}" aria-pressed="${skill.skill_id === state.selected}"><span class="skill-emblem">${emblem(skill)}</span><span class="skill-text"><span class="skill-title">${escape(title(skill))}</span><span class="skill-author">${escape(skill.skill_id.split('/')[0])}${skill.standalone ? ' · Standalone skill' : ''}</span><span class="skill-description">${escape(skill.description)}</span><span class="skill-tags">${skillOrigins(state.inventory, skill.skill_id).length ? `<span class="tag">${escape(sourceSummary(skillOrigins(state.inventory, skill.skill_id)))}</span>` : ''}${skill.tags.map(tag => `<span class="tag">${escape(tag)}</span>`).join('')}</span></span></button>
       <div class="skill-action">${project ? `<button class="switch" type="button" role="switch" aria-checked="${enabled(skill)}" aria-label="Enable ${escape(title(skill))} for ${escape(project.name)}" data-toggle="${escape(skill.skill_id)}" ${state.saving ? 'disabled' : ''}></button><span class="switch-status ${enabled(skill) ? 'is-enabled' : ''}">${state.saving && state.pendingSkill === skill.skill_id ? 'Saving…' : enabled(skill) ? 'Enabled' : 'Not enabled'}</span>` : '<span class="library-label">In library</span>'}</div>
     </article>`;
 }
@@ -163,6 +165,9 @@ function render() {
   $('#page-title').textContent = project ? project.name : 'All skills';
   $('#page-description').textContent = project ? state.demo ? 'Try project selections using sample skills. Changes stay in this browser and do not configure an assistant.' : 'Choose the skills your assistant can access in this project.' : 'Your saved workflows, ready when the right project needs them.';
   $('#connect-project').hidden = !project;
+  $('#undo-selection').hidden = !lastSelection || lastSelection.project_id !== project?.id;
+  $('#undo-selection').disabled = state.saving || lastSelection?.revision !== project?.revision;
+  $('#create-first-project').hidden = state.demo || state.projects.length > 0;
   $('#count-all').textContent = state.skills.length;
   const count = state.skills.filter(enabled).length;
   $('#count-enabled').textContent = count;
@@ -196,7 +201,7 @@ function render() {
       return `<section class="skill-folder" aria-label="${escape(folder)}">
         <div class="folder-header">
           <button class="folder-disclosure" type="button" data-folder="${escape(folder)}" aria-expanded="${expanded}" aria-controls="folder-children-${index}"><span class="folder-chevron ${expanded ? 'is-open' : ''}">${icon('chevron')}</span><span class="folder-emblem">${icon('folder')}</span><span class="folder-copy"><span class="folder-title">${escape(folder)}</span><span class="folder-summary">${project ? `${selectedCount} of ${members.length} enabled` : `${members.length} saved skills`}${shown.length !== members.length ? ` · ${shown.length} matching` : ''}</span></span></button>
-          ${project ? `<div class="folder-action"><button class="folder-checkbox" type="button" role="checkbox" aria-checked="${checked}" aria-label="Enable all ${escape(folder)} for ${escape(project.name)}" title="Applies to all ${members.length} skills in this folder, including filtered-out skills" data-toggle-folder="${escape(folder)}" ${state.saving ? 'disabled' : ''}>${icon(checked === 'mixed' ? 'minus' : 'check')}</button><span class="switch-status ${checked === 'true' ? 'is-enabled' : ''}">${status}</span></div>` : ''}
+          ${project ? `<div class="folder-action"><button class="folder-checkbox" type="button" role="checkbox" aria-checked="${checked}" aria-label="Enable all ${escape(folder)} for ${escape(project.name)}" title="Applies to all ${members.length} skills in this folder, including filtered-out skills" data-toggle-folder="${escape(folder)}" ${state.saving ? 'disabled' : ''}>${icon(checked === 'mixed' ? 'minus' : 'check')}</button><span class="switch-status ${checked === 'true' ? 'is-enabled' : ''}">${status}${shown.length !== members.length ? ` · affects all ${members.length} skills` : ''}</span></div>` : ''}
         </div>
         <div id="folder-children-${index}" class="folder-children" ${expanded ? '' : 'hidden'}>${shown.map(skill => skillRow(skill, project)).join('')}</div></section>`;
     }).join('') + skills.filter(skill => skill.standalone).map(skill => skillRow(skill, project)).join('');
@@ -212,7 +217,10 @@ async function renderDetails() {
   const request = ++detailRequest;
   const selected = state.selected;
   if (!selected) {
-    $('#skill-detail').innerHTML = `<div class="detail-empty"><span data-icon="folder">${icon('folder')}</span><h2>Your skills, organized</h2><p>Enable a collection, or expand it to choose its skills. Standalone skills have their own switch. Select any skill to inspect its workflow.</p></div>`;
+    const firstUse = !state.demo && !state.projects.length;
+    $('#skill-detail').innerHTML = firstUse
+      ? `<div class="detail-empty setup-empty"><span data-icon="folder">${icon('folder')}</span><h2>Set up your first project</h2><ol><li>Create a project to keep its selection separate.</li><li>Enable the skills you want it to use.</li><li>Connect your assistant and check its available skills.</li></ol><button class="button primary" type="button" data-create-project>Create project</button><p>Or browse the collection first. Scanning is optional.</p></div>`
+      : `<div class="detail-empty"><span data-icon="folder">${icon('folder')}</span><h2>Your skills, organized</h2><p>${currentProject() ? 'Enable a collection, or expand it to choose its skills. Standalone skills have their own switch.' : 'Choose a project to manage its enabled skills.'} Select any skill to inspect its workflow.</p></div>`;
     restoreFocus('#skill-detail');
     return;
   }
@@ -231,11 +239,11 @@ async function renderDetails() {
     ${project ? `<div class="detail-status"><div><strong>${enabled(skill) ? 'Enabled for this project' : 'Not enabled for this project'}</strong><p>${state.demo ? 'Sample selection in this browser only; no assistant is configured' : enabled(skill) ? 'Available through its MCP connection' : 'Saved in the library, hidden from this project'}</p></div><button class="switch" role="switch" type="button" aria-checked="${enabled(skill)}" aria-label="Enable ${escape(title(skill))} for ${escape(project.name)}" data-toggle="${escape(skill.skill_id)}" ${state.saving ? 'disabled' : ''}></button></div>` : ''}
     ${skill.standalone && skill.skill_id === 'pbakaus/impeccable' ? '<section class="detail-section"><h3>One skill, many commands</h3><p>Init captures project context. Audit checks quality. Polish refines the finish. Adapt improves responsiveness. All commands share this skill’s enable switch. The full command catalog is included under Package files → scripts/command-metadata.json.</p></section>' : ''}
     ${project && !state.demo ? `<button class="button secondary native-settings-button" type="button" data-native-setup>${project.native_bindings?.some(b => b.skill_id === skill.skill_id) ? 'Manage coding-app copies' : 'Install in coding apps'}</button>${project.native_bindings?.find(b => b.skill_id === skill.skill_id) ? `<p class="field-help">Managed in ${escape(project.native_bindings.find(b => b.skill_id === skill.skill_id).targets.join(', '))}. The project switch controls these copies too; reload the coding agent if needed.</p>` : ''}` : ''}
-    <section class="detail-section"><h3>Your note</h3><p>${escape(skill.personal_notes || 'No personal note saved.')}</p></section>
-    <section class="detail-section"><h3>Required capabilities</h3><div class="requirements">${skill.requirements.map(r => `<span class="tag">${escape(r)}</span>`).join('') || '<span class="tag">Not specified</span>'}</div></section>
+    <section class="detail-section"><h3>Required capabilities</h3><div class="requirements">${skill.requirements.map(r => `<span class="tag">${escape(r)}</span>`).join('') || '<span class="tag">Not specified</span>'}</div><p class="field-help">${skill.requirements_assessment === 'curator_listed' ? 'Curator-listed capabilities; runtime access and complete dependencies are not verified.' : 'Requirements have not been assessed. Review the instructions and setup before use.'}</p>${skill.author_compatibility ? `<p class="field-help">Author’s compatibility note: ${escape(skill.author_compatibility)}</p>` : ''}</section>
+    <details class="detail-advanced"><summary>Notes and provenance</summary><section class="detail-section"><h3>Your note</h3><p>${escape(skill.personal_notes || 'No personal note saved.')}</p></section>
     ${originDetails(skillOrigins(state.inventory, skill.skill_id))}
     <section class="detail-section"><h3>Original source</h3>${link ? `<a class="source-link" href="${escape(link)}" target="_blank" rel="noopener noreferrer">${icon('external')}View skill on GitHub</a>` : '<p>Imported from a local source.</p>'}<p class="source-meta">${skill.source.commit ? `Saved commit <code>${escape(skill.source.commit.slice(0, 10))}</code>` : 'No upstream commit recorded'} · ${skill.manifest.length} files</p></section>
-    <div class="detail-tabs"><button type="button" data-detail-tab="instructions" aria-pressed="${state.detailTab === 'instructions'}">Instructions</button><button type="button" data-detail-tab="files" aria-pressed="${state.detailTab === 'files'}">Package files <span>${skill.manifest.length}</span></button></div>
+    </details><div class="detail-tabs"><button type="button" data-detail-tab="instructions" aria-pressed="${state.detailTab === 'instructions'}">Instructions</button><button type="button" data-detail-tab="files" aria-pressed="${state.detailTab === 'files'}">Package files <span>${skill.manifest.length}</span></button></div>
     <div id="detail-tab-content">${state.detailTab === 'instructions' ? `<pre class="instructions" tabindex="0" aria-label="Skill instructions">${escape(skill.instructions)}</pre>` : `<ul class="files-list">${skill.manifest.map(file => `<li><button class="file-button" type="button" data-file="${escape(file.path)}">${icon('document')}${escape(file.path)}</button></li>`).join('')}</ul>`}</div>
   </div>`;
   restoreFocus('#skill-detail');
@@ -244,7 +252,7 @@ async function loadState() {
   try {
     const data = await api('/api/state');
     state.skills = data.skills;
-    state.projects = data.projects;
+    state.projects = data.projects.filter(p => !p.archived);
     state.demo = data.mode === 'demo';
     if (state.demo) {
       let saved = {}; try { saved = JSON.parse(localStorage.getItem('skill-library-demo-selections') || '{}'); } catch {}
@@ -255,10 +263,10 @@ async function loadState() {
     if (!state.loaded) {
       if (state.inventory.last_scan) $('#inventory-navigation').open = true;
       const saved = savedProject();
-      state.projectId = saved === '__library__' ? null : data.projects.find(p => p.id === saved)?.id ?? data.projects[0]?.id ?? null;
+      state.projectId = saved === '__library__' ? null : state.projects.find(p => p.id === saved)?.id ?? state.projects[0]?.id ?? null;
       let source; try { source = localStorage.getItem('skill-library-source'); } catch {}
       if (source && (source === 'all' || state.inventory.groups.some(g => g.id === source))) { state.sourceId = source; state.projectId = null; $('#inventory-navigation').open = true; }
-    } else if (state.projectId && !data.projects.some(p => p.id === state.projectId)) state.projectId = null;
+    } else if (state.projectId && !state.projects.some(p => p.id === state.projectId)) state.projectId = null;
     state.loaded = true;
     clearError();
     render();
@@ -276,6 +284,7 @@ async function toggleSkill(id) {
   render();
   try {
     const updated = await api(`/api/projects/${encodeURIComponent(project.id)}/skills`, { method: 'PATCH', body: JSON.stringify({ skill_id: id, enabled: turnOn, expected_revision: project.revision }) });
+    lastSelection = { project_id: project.id, enabled_skills: [...project.enabled_skills], revision: updated.revision };
     state.projects = state.projects.map(p => p.id === updated.id ? updated : p);
     clearError();
     toast(`${title(state.skills.find(s => s.skill_id === id))} ${turnOn ? 'enabled' : 'disabled'} for ${project.name}${project.native_bindings?.some(b => b.skill_id === id) ? '. Reload your coding agent if needed.' : ''}`);
@@ -293,12 +302,24 @@ async function toggleFolder(folder) {
   render();
   try {
     const updated = await api(`/api/projects/${encodeURIComponent(project.id)}/folder`, { method: 'PATCH', body: JSON.stringify({ folder, enabled: turnOn, expected_revision: project.revision }) });
+    lastSelection = { project_id: project.id, enabled_skills: [...project.enabled_skills], revision: updated.revision };
     state.projects = state.projects.map(p => p.id === updated.id ? updated : p);
     clearError();
     toast(`${folder}: ${members.length} skills ${turnOn ? 'enabled' : 'disabled'} for ${project.name}${project.native_bindings?.length ? '. Reload managed coding apps if needed.' : ''}`);
   } catch (error) { showError(error.message); await loadState(); showError(error.message); }
   finally { state.saving = false; state.pendingFolder = null; render(); }
 }
+
+$('#undo-selection').addEventListener('click', async () => {
+  const project = currentProject();
+  if (!lastSelection || !project || lastSelection.project_id !== project.id || state.saving) return;
+  state.saving = true; render();
+  try {
+    const updated = await api(`/api/projects/${encodeURIComponent(project.id)}/selection`, { method: 'POST', body: JSON.stringify({ enabled_skills: lastSelection.enabled_skills, expected_revision: lastSelection.revision }) });
+    state.projects = state.projects.map(p => p.id === updated.id ? updated : p); lastSelection = null; toast('Previous selection restored. Native conflicts are checked before files change.');
+  } catch (error) { await loadState(); showError(error.message); }
+  finally { state.saving = false; render(); }
+});
 
 $('#inventory-nav').addEventListener('click', event => { const button = event.target.closest('[data-source]'); if (button) { rememberFocus(button); chooseSource(button.dataset.source); } });
 $('#inventory-group').addEventListener('change', event => chooseSource(event.target.value));
@@ -321,6 +342,7 @@ $('#filters').addEventListener('click', event => { const button = event.target.c
 document.addEventListener('keydown', event => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && !document.querySelector('dialog[open]')) { event.preventDefault(); (state.sourceId ? $('#inventory-search') : $('#skill-search')).focus(); } });
 $('#retry').addEventListener('click', () => void loadState());
 document.addEventListener('click', async event => {
+  if (event.target.closest('[data-create-project]')) { openCreateProject(); return; }
   if (event.target.closest('[data-native-setup]')) { openNativeSettings(); return; }
   const folderToggle = event.target.closest('[data-toggle-folder]');
   if (folderToggle) { rememberFocus(folderToggle); void toggleFolder(folderToggle.dataset.toggleFolder); return; }
@@ -364,12 +386,15 @@ document.addEventListener('click', async event => {
   }
 });
 
-$('#new-project').addEventListener('click', () => {
+function openCreateProject() {
+  if (state.demo) return;
   $('#create-form').reset();
   $('#create-error').hidden = true;
   $('#create-dialog').showModal();
   $('#new-name').focus();
-});
+}
+$('#new-project').addEventListener('click', openCreateProject);
+$('#create-first-project').addEventListener('click', openCreateProject);
 $('#create-form').addEventListener('submit', async event => {
   event.preventDefault();
   const button = $('#create-submit');
@@ -381,6 +406,7 @@ $('#create-form').addEventListener('submit', async event => {
     state.projects.push(project);
     $('#create-dialog').close();
     chooseProject(project.id);
+    ($('#skills-list [data-folder]') || $('#skills-list [data-select]') || $('#skill-search')).focus({ preventScroll: true });
     toast('Project created. Choose the skills it needs.');
   } catch (error) { $('#create-error').textContent = error.message; $('#create-error').hidden = false; }
   finally { button.disabled = false; button.textContent = 'Create project'; }
@@ -390,21 +416,38 @@ function renderConnection() {
   const showLocal = $('#connection-local-paths').checked;
   const config = showLocal ? connection : connection?.example;
   $('#copy-connection').textContent = showLocal ? 'Copy configuration' : 'Copy example';
-  $('#connection-code').textContent = !config ? 'Loading configuration…' : format === 'http' ? `${location.origin}${config.http_path}` : config[format];
+  $('#connection-code').textContent = !config ? 'Loading configuration…' : format === 'http' ? config.http_headers ? JSON.stringify({ url: `${location.origin}${config.http_path}`, headers: config.http_headers }, null, 2) : `${location.origin}${config.http_path}` : config[format];
 }
 $('#connect-project').addEventListener('click', async () => {
   const project = currentProject();
   if (!project) return;
+  const request = ++connectionRequest;
   connection = null;
   $('#connection-local-paths').checked = false;
   $('#connection-local-paths').disabled = state.demo;
   $('#connection-description').textContent = `Give your assistant access to the skills enabled for ${project.name}.`;
   $('#connection-error').hidden = true;
   $('#copy-connection').disabled = true;
+  $('#check-connection').hidden = state.demo;
+  $('#check-connection').disabled = true;
+  $('#connection-check-status').textContent = state.demo ? 'Public demo: no local server or external assistant is configured.' : 'No external assistant connection has been verified.';
   renderConnection();
   $('#connect-dialog').showModal();
-  try { connection = await api(`/api/projects/${encodeURIComponent(project.id)}/connection`); renderConnection(); $('#copy-connection').disabled = false; }
-  catch (error) { $('#connection-error').textContent = error.message; $('#connection-error').hidden = false; }
+  try { const result = await api(`/api/projects/${encodeURIComponent(project.id)}/connection`); if (request !== connectionRequest) return; connection = result; renderConnection(); $('#copy-connection').disabled = false; $('#check-connection').disabled = state.demo; }
+  catch (error) { if (request === connectionRequest) { $('#connection-error').textContent = error.message; $('#connection-error').hidden = false; } }
+});
+$('#check-connection').addEventListener('click', async () => {
+  const project = state.projects.find(p => p.id === connection?.project_id);
+  if (!project || state.demo || $('#check-connection').disabled) return;
+  const request = connectionRequest;
+  $('#check-connection').disabled = true;
+  $('#connection-check-status').textContent = 'Starting a temporary stdio client and checking project-scoped retrieval…';
+  try {
+    const result = await api(`/api/projects/${encodeURIComponent(project.id)}/check`, { method: 'POST', body: JSON.stringify({ expected_revision: project.revision }) });
+    if (request !== connectionRequest) return;
+    $('#connection-check-status').textContent = `Local stdio check passed: ${result.available_skills} enabled skill${result.available_skills === 1 ? '' : 's'} available.${result.retrieval_checked ? ' Instructions and a manifested file were retrieved.' : ' Enable a skill and check again to test retrieval.'} Your external assistant connection is still unverified.`;
+  } catch (error) { if (request === connectionRequest) $('#connection-check-status').textContent = `Check failed: ${error.message}`; }
+  finally { if (request === connectionRequest) { $('#check-connection').disabled = false; if ($('#connect-dialog').open && document.activeElement === document.body) $('#check-connection').focus({ preventScroll: true }); } }
 });
 $('#connection-format').addEventListener('change', renderConnection);
 $('#connection-local-paths').addEventListener('change', renderConnection);
@@ -414,23 +457,50 @@ $('#copy-connection').addEventListener('click', async () => {
 });
 void loadState();
 
+let nativePreview = null;
+let nativePreviewRequest = 0;
+function nativeInput() {
+  return { skill_id: state.selected, root: $('#native-root').value.trim(), targets: [...document.querySelectorAll('[name="native-app"]:checked')].map(c => c.value), enabled: currentProject()?.enabled_skills.includes(state.selected), expected_revision: currentProject()?.revision };
+}
+function invalidateNativePreview() {
+  nativePreview = null; ++nativePreviewRequest;
+  $('#native-submit').disabled = true; $('#native-plan').hidden = true;
+}
+$('#native-root').addEventListener('input', invalidateNativePreview);
+document.querySelectorAll('[name="native-app"]').forEach(input => input.addEventListener('change', invalidateNativePreview));
+$('#native-preview').addEventListener('click', async () => {
+  const project = currentProject(); if (!project) return;
+  const input = nativeInput(), generation = ++nativePreviewRequest;
+  nativePreview = null; $('#native-submit').disabled = true; $('#native-preview').disabled = true;
+  $('#native-error').hidden = true;
+  try {
+    const plan = await api(`/api/projects/${encodeURIComponent(project.id)}/native/preview`, { method: 'POST', body: JSON.stringify(input) });
+    if (generation !== nativePreviewRequest) return;
+    const intro = document.createElement('p'); intro.textContent = plan.changes.length ? 'Review these exact destinations. They will be checked again when applying.' : 'No native files change. Disabled skills are copied only when enabled.';
+    $('#native-plan').replaceChildren(intro, ...plan.changes.map(change => { const line = document.createElement('p'); line.textContent = `${change.action}: ${change.path}${change.conflict ? ` — Conflict: ${change.conflict}` : ''}`; return line; }));
+    $('#native-plan').hidden = false;
+    if (plan.can_apply) { nativePreview = JSON.stringify(input); $('#native-submit').disabled = false; }
+  } catch (error) { if (generation === nativePreviewRequest) { $('#native-error').textContent = error.message; $('#native-error').hidden = false; } }
+  finally { $('#native-preview').disabled = false; }
+});
 function openNativeSettings() {
   const project = currentProject(); if (!project || !state.selected) return;
   const binding = project.native_bindings?.find(b => b.skill_id === state.selected);
   $('#native-description').textContent = `${title(state.skills.find(s => s.skill_id === state.selected))} for ${project.name}.`;
   $('#native-root').value = binding?.root ?? project.path;
   document.querySelectorAll('[name="native-app"]').forEach(c => { c.checked = binding?.targets.includes(c.value) ?? false; });
-  $('#native-error').hidden = true; $('#native-dialog').showModal();
+  invalidateNativePreview(); $('#native-error').hidden = true; $('#native-dialog').showModal();
 }
 $('#native-form').addEventListener('submit', async event => {
   event.preventDefault(); const project = currentProject(), id = state.selected;
   if (!project || !id) return;
   const button = $('#native-submit'); button.disabled = true; button.textContent = 'Saving…'; $('#native-error').hidden = true;
   try {
+    if (!nativePreview || JSON.stringify(nativeInput()) !== nativePreview) throw new Error('Preview these destinations before applying.');
     const updated = await api(`/api/projects/${encodeURIComponent(project.id)}/native`, { method: 'PATCH', body: JSON.stringify({ skill_id: id, root: $('#native-root').value.trim(), targets: [...document.querySelectorAll('[name="native-app"]:checked')].map(c => c.value), enabled: project.enabled_skills.includes(id), expected_revision: project.revision }) });
     state.projects = state.projects.map(p => p.id === updated.id ? updated : p); $('#native-dialog').close(); render(); toast('Coding-app destinations saved. Reload the agent if needed.');
   } catch (error) { $('#native-error').textContent = error.message; $('#native-error').hidden = false; }
-  finally { button.disabled = false; button.textContent = 'Save destinations'; }
+  finally { button.disabled = !nativePreview; button.textContent = 'Apply reviewed destinations'; }
 });
 
 let localScan = null;

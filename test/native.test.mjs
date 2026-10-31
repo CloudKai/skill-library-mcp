@@ -5,9 +5,10 @@ import {cp,mkdtemp,mkdir,readFile,writeFile,rm,access,symlink} from 'node:fs/pro
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {SkillLibrary} from '../dist/library.js';
-import {ProjectStore} from '../dist/projects.js';
-import {NativeTransaction,projectLock} from '../dist/native.js';
+import {SkillLibrary} from '../dist/library/skill-library.js';
+import {ProjectStore} from '../dist/projects/project-store.js';
+import {NativeTransaction} from '../dist/projects/native-transaction.js';
+import {projectLock} from '../dist/shared/file-lock.js';
 const has=async p=>access(p).then(()=>true,()=>false);
 async function fixture(){const root=await mkdtemp(path.join(os.tmpdir(),'native-test-'));const lib=path.join(root,'library');await copyStarterLibrary(lib);const projectRoot=path.join(root,'project');await mkdir(projectRoot);const library=await SkillLibrary.load(lib);const projects=new ProjectStore(library);const project=await projects.create({name:'Native fixture',path:projectRoot});return{root,lib:library.directory,projectRoot,library,projects,project};}
 const targets={codex:'.agents','claude-code':'.claude',cursor:'.cursor'};

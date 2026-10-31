@@ -23,9 +23,9 @@ Find a skill using its name, description, tags, and curator notes.
 {"query":"debugging","capabilities":["shell","filesystem"],"limit":3}
 ```
 
-Output: `{matches, total_matches, compatibility_note}`. Each match has `skill_id`, `revision`, `name`, `description`, `folder`, `standalone`, `tags`, `preferred`, `status`, `requirements`, `match_reasons`, `compatibility`, and `missing_requirements`.
+Output: `{matches, total_matches, compatibility_note}`. Each match has `skill_id`, `revision`, `name`, `description`, `folder`, `standalone`, `tags`, `preferred`, `status`, `requirements`, `requirements_assessment`, `author_compatibility`, `match_reasons`, `compatibility`, and `missing_requirements`.
 
-Exact-name matches receive a priority bonus. Otherwise weighted keyword matches determine order, then preference and stable ID break ties. Stop words do not contribute. No match returns an empty array. Compatibility is `unknown` when capabilities are omitted, `missing_requirements` when curator-listed requirements are absent, and `compatible` when those listed requirements are covered. It is not runtime or credential verification.
+Exact-name matches receive a priority bonus. Otherwise weighted keyword matches determine order, then preference and stable ID break ties. Stop words do not contribute. No match returns an empty array. Compatibility is `unknown` when capabilities are omitted or the requirement assessment is unknown, `missing_requirements` when assessed curator-listed requirements are absent, and `compatible` when those listed requirements are covered. It is not runtime or credential verification. Legacy nonempty requirement lists count as curator-listed; legacy empty lists stay unknown. An explicit `requirements_assessment: "curator_listed"` supports an assessed empty list. The author's optional compatibility declaration is preserved as free text, separate from the capability comparison; tool declarations do not grant permissions.
 
 Errors: `INVALID_INPUT` for invalid arguments; unexpected internal failures use `INTERNAL_ERROR` without exposing filesystem paths.
 

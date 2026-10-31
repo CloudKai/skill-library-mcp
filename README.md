@@ -20,6 +20,8 @@ Use **Create project** to add another profile. A profile's optional folder path 
 
 Use **Connect project** to copy a configuration that binds an MCP client to that exact profile. It supplies JSON, a Codex TOML fragment, and a project-specific HTTP URL. No VS Code extension is installed: this implements the same per-project enable/disable interaction in a local web app.
 
+With no projects yet, **Create project** is available in the main header and the three-step setup panel. In **Connect project**, **Check local stdio server** starts a temporary real MCP SDK client with the same executable, library directory and project ID as the working configuration. It checks the available selection, retrieves one instruction/file when a skill is enabled, and checks that a disabled skill is rejected when one exists. The check leaves project settings unchanged and returns no private paths or instruction text. It does not verify an external coding assistant, native host activation, or the HTTP transport; ask your assistant to list the enabled skills to verify its own connection.
+
 Use the sidebar icon beside **Skill Library** to show or hide navigation. Hiding it gives the workspace the full width. The choice is remembered across the library, marketplace and guide, separately for wide and narrow screens. Navigation starts closed at 960 px and below; project selection remains available above the library. Escape closes navigation when focus is inside it and returns focus to the icon. Projects sit directly under Library, and section links sit under MCP guide. Marketplace rankings stay in the main page without duplicate sidebar controls. The guide's **On this page** disclosure starts open.
 
 ## Scan skills already on this computer
@@ -70,6 +72,8 @@ The documented skills.sh API needs a Vercel OIDC identity. Select the intended t
 Search skills or choose Most installed, Trending, Hot now, or GitHub stars. All tabs and keyword search show project collections. Most installed, Trending and Hot now group the first 500 provider-ranked skills, ordered by each project’s highest-ranked member. Search groups up to 50 matching skills in first-match order. GitHub stars already ranks whole repositories. Each collection appears once across the grouped pages. Click it to read the author’s project description and browse a compact skill picker, with one-line summaries and a route back from individual details. Sample counts describe matching or ranked members, not project downloads or the repository’s total skill count. Installs measure skills; GitHub stars measure repositories with the agent-skills topic. The UI preserves each provider’s metric and retrieval time, and shows failures instead of substituted data. Collections open a verified skill picker. Read the instructions and repository setup, then install a pinned public GitHub package.
 
 **Install** saves a new skill disabled. **Install & enable for project** also activates it. Existing installations preserve their selection on ordinary installation. Native copies require an explicit project selection and a validated absolute directory. Choose Codex (`.agents/skills`), Claude Code (`.claude/skills`) and/or Cursor (`.cursor/skills`). Existing library skills offer the same setup in their detail pane. Clearing every destination removes managed copies while retaining MCP activation.
+
+Reinstalling an existing source/path is supported only for the same saved commit. If the reviewed commit differs, Marketplace links to **Review update** in Library settings and ordinary installation is rejected with `UPDATE_REVIEW_REQUIRED`. Use the separate review/apply workflow to update explicitly; there is no automatic update. Imported requirements remain **unknown** until assessed; the author's compatibility note is shown separately and does not verify runtime access or complete dependencies.
 
 The project and collection switches update both MCP availability and configured native copies. Packages are staged, content-checked and commit-pinned, with licenses retained. The app marks its own copies, refuses conflicting or edited files, and serializes changes with a process lock. An interrupted transaction rolls back or finalizes on server startup according to the saved project commit. An installation can be saved to the library while native activation fails; the UI explicitly reports that partial outcome. Preserve recovery journals/staging folders if recovery itself reports a conflict.
 
@@ -164,6 +168,7 @@ npm run http
 - Use a client that supports **Streamable HTTP**, not legacy SSE.
 - The server binds only to `127.0.0.1`; Host checks and browser Origin checks are enabled.
 - This local endpoint has no user authentication. Do not expose it through a public tunnel or deploy it as a private remote service without adding authentication.
+- Prefer stdio for ordinary local assistant connections. Origin/Host checks and the owner UI write token do not authenticate local processes: a process that reaches the optional HTTP MCP can request the unscoped library. This mode assumes trusted local processes; broader distribution needs a separate HTTP access-token or restricted-IPC decision.
 
 HTTP is stateless: each POST gets a fresh protocol transport over the current catalog snapshot, with live project-selection filtering when configured. There is no persistent GET stream. The test suite checks a real MCP SDK client against both transports. The owner-side UI API imports packages, writes project profiles and manages explicitly configured native copies; MCP tools remain read-only. UI changes require a same-origin write token and are saved atomically with conflict checks.
 
@@ -252,3 +257,17 @@ The saved Impeccable 4.7.0 text snapshot includes its original instructions, ref
 ## Source repository
 
 The public source includes application code, tests, documentation and npm manifests. Dependencies are installed locally with `npm ci`; `node_modules`, generated builds, environment files, local editor settings and private runtime data are excluded from Git. CI runs type checking and the test suite on Node.js 24. See [contributing](CONTRIBUTING.md) for the branch and commit workflow.
+
+## Local maintenance and release controls
+
+Open **Library settings** for project rename/archive/restore, curator notes/tags/favorites, saved-skill archiving, snapshot refresh, status and private backups. Native destination settings now require **Preview changes** before applying; exact paths and conflicts are shown. Selection Undo uses the last saved project revision and preserves native conflict checks.
+
+**Download private backup** exports current packages/profiles, including private contents and paths. **Preview restore** validates the archive before applying. Restore merges missing packages and creates path-free profiles with no native bindings; conflicting saved bytes are never overwritten. Source inventory, old rollback history and credentials are excluded. A profile-stage failure is reported separately from saved packages.
+
+For public GitHub packages, enter a reviewed 40-character commit in Library settings, inspect changed files and before/after text, then apply explicitly. Rollback restores a retained earlier revision. Disable enabled managed native copies first; update/rollback never silently replaces them. Reconnect stdio clients after package changes.
+
+`npm run local` builds and starts the library. Add `-- --marketplace` to launch the already-built/authenticated sibling discovery process as well. `MARKETPLACE_PORT` can differ from the library's `PORT`. Both processes stop together. `npm run ui` remains supported.
+
+An optional private `SKILL_LIBRARY_HTTP_TOKEN` (64 lowercase hex characters) requires a Bearer header on HTTP MCP requests. Working HTTP connection settings include the header after explicitly revealing local configuration. Default HTTP mode still assumes trusted local processes, and the owner UI is not a multi-user authentication system. Prefer stdio and never tunnel the owner API.
+
+Package snapshots default to a 128 MiB aggregate byte budget; `SKILL_LIBRARY_MAX_BYTES` may deliberately set a value from 1 MiB to 1 GiB. Portable backups are limited to 64 MiB. `npm run benchmark` measures synthetic metadata workloads. Linux/macOS Node 22/24 CI is defined; Windows/native-host behavior needs separate qualification. See [the implementation record](docs/audit-2026-10-27/IMPLEMENTATION.md) for guarantees, caveats and verification.

@@ -4,8 +4,9 @@ import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promis
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { SkillLibrary, hash } from '../dist/library.js';
-import { callTool } from '../dist/server.js';
+import { SkillLibrary } from '../dist/library/skill-library.js';
+import { hash } from '../dist/shared/hash.js';
+import { callTool } from '../dist/mcp/server.js';
 
 let root, library;
 const main = '---\nname: example\ndescription: Investigate reproducible debugging failures.\n---\n\nRead references/checklist.md.\n';
@@ -48,6 +49,28 @@ test('supporting files cannot escape the manifest or mix revisions', () => {
   }
   assert.throws(() => library.read('owner/example', revision, 'missing.md'), { code: 'FILE_NOT_FOUND' });
   assert.throws(() => library.read('owner/example', 'wrong-version', 'SKILL.md'), { code: 'REVISION_NOT_FOUND' });
+});
+
+test('unassessed capability lists stay unknown and author compatibility remains free text', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'requirement-evidence-'));
+  try {
+    await mkdir(path.join(directory, 'example'));
+    const instructions = main.replace('description:', 'compatibility: Requires a network connection and host-specific tools.\ndescription:');
+    await writeFile(path.join(directory, 'example/SKILL.md'), instructions);
+    const entry = { skill_id: 'owner/example', package: 'example', tags: [], preferred: false, status: 'active', personal_notes: '', requirements: [], source: { url: 'local:fixture', path: 'example' } };
+    const load = async overrides => {
+      await writeFile(path.join(directory, 'catalog.json'), JSON.stringify({ version: 1, skills: [{ ...entry, ...overrides }] }));
+      return SkillLibrary.load(directory);
+    };
+    const unknown = await load({});
+    assert.equal(unknown.search({ query: 'debugging', capabilities: ['shell'] }).matches[0].compatibility, 'unknown');
+    assert.equal(unknown.get('owner/example').author_compatibility, 'Requires a network connection and host-specific tools.');
+    assert.equal(unknown.get('owner/example').instructions, instructions);
+    const unassessed = await load({ requirements: ['shell'], requirements_assessment: 'unknown' });
+    assert.equal(unassessed.search({ query: 'debugging', capabilities: ['shell'] }).matches[0].compatibility, 'unknown');
+    const assessed = await load({ requirements_assessment: 'curator_listed' });
+    assert.equal(assessed.search({ query: 'debugging', capabilities: [] }).matches[0].compatibility, 'compatible');
+  } finally { await rm(directory, { recursive: true, force: true }); }
 });
 
 test('binary assets retain exact bytes via base64', () => {

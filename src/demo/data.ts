@@ -1,4 +1,4 @@
-import { hash } from './library.js';
+import { hash } from '../shared/hash.js';
 export const sampleProjects = [
   { id: 'example-web', name: 'Example web project', path: '', enabled_skills: ['demo/plan-a-change','demo/review-a-change'], native_bindings: [] },
   { id: 'example-api', name: 'Example API project', path: '', enabled_skills: ['demo/debug-an-issue'], native_bindings: [] },

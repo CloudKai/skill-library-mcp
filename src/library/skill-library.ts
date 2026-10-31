@@ -1,13 +1,13 @@
-import { createHash } from 'node:crypto';
+import { defaultLibrary } from '../shared/paths.js';
+import { hash } from '../shared/hash.js';
+import { LibraryError } from '../shared/library-error.js';
 import { lstat, readdir, readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { parseDocument } from 'yaml';
 import { z } from 'zod';
 
-export const defaultLibrary = fileURLToPath(new URL('../library/', import.meta.url));
-export const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 const sourceSchema = z.object({ url: z.string(), path: z.string(), commit: z.string().optional(), bundle_version: z.string().optional(), note: z.string().optional() }).strict();
+const previousSchema = z.object({ package: z.string(), source: sourceSchema, requirements: z.array(z.string()), requirements_assessment: z.enum(['unknown', 'curator_listed']).optional() }).strict();
 export const entrySchema = z.object({
   skill_id: z.string().regex(/^[a-z0-9][a-z0-9/_-]{0,127}$/),
   package: z.string(), tags: z.array(z.string().min(1).max(64)).max(30),
@@ -15,6 +15,9 @@ export const entrySchema = z.object({
   standalone: z.boolean().default(false),
   preferred: z.boolean(), status: z.enum(['active', 'archived']),
   personal_notes: z.string().max(4000), requirements: z.array(z.string().min(1).max(64)).max(30),
+  requirements_assessment: z.enum(['unknown', 'curator_listed']).optional(),
+  overrides_starter: z.boolean().optional(),
+  history: z.array(previousSchema).max(20).optional(),
   source: sourceSchema,
 }).strict();
 const catalogSchema = z.object({ version: z.literal(1), skills: z.array(entrySchema).max(1000) }).strict();
@@ -22,11 +25,8 @@ export type Entry = z.infer<typeof entrySchema>;
 type Frontmatter = Record<string, unknown> & { name: string; description: string };
 export type ManifestFile = { path: string; uri: string; sha256: string; size_bytes: number; mime_type: string };
 export type Snapshot = { entry: Entry; revision: string; frontmatter: Frontmatter; manifest: ManifestFile[]; files: Map<string, Buffer> };
-export class LibraryError extends Error {
-  constructor(public code: string, message: string) { super(message); }
-}
 const fail = (code: string, message: string): never => { throw new LibraryError(code, message); };
-function safeRelative(value: string) {
+export function safeRelative(value: string) {
   if (!value || value.includes('\\') || value.includes('\0') || path.posix.isAbsolute(value) || value.split('/').some(p => !p || p === '.' || p === '..')) {
     fail('INVALID_PATH', 'Use a relative path from the skill manifest without parent segments.');
   }
@@ -85,7 +85,13 @@ export async function readCatalog(directory: string) {
   let local: z.infer<typeof catalogSchema> = { version: 1, skills: [] };
   try { local = catalogSchema.parse(JSON.parse(await readFile(path.join(directory, '.local/catalog.json'), 'utf8'))); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
-  return catalogSchema.parse({ version: 1, skills: [...starter.skills, ...local.skills] });
+  const skills = new Map(starter.skills.map(entry => [entry.skill_id, entry]));
+  for (const entry of local.skills) {
+    if (skills.has(entry.skill_id) && !entry.overrides_starter) fail('INVALID_CATALOG', 'Duplicate skill_id without an explicit private starter override.');
+    if (local.skills.filter(s => s.skill_id === entry.skill_id).length > 1) fail('INVALID_CATALOG', 'Duplicate local skill_id.');
+    skills.set(entry.skill_id, entry);
+  }
+  return catalogSchema.parse({ version: 1, skills: [...skills.values()] });
 }
 
 export class SkillLibrary {
@@ -94,6 +100,9 @@ export class SkillLibrary {
     const root = await realpath(directory);
     const catalog = await readCatalog(root);
     const snapshots = new Map<string, Snapshot>();
+    const byteLimit = Number(process.env.SKILL_LIBRARY_MAX_BYTES ?? 128 * 1024 * 1024);
+    if (!Number.isSafeInteger(byteLimit) || byteLimit < 1024 * 1024 || byteLimit > 1024 * 1024 * 1024) fail('INVALID_INPUT', 'SKILL_LIBRARY_MAX_BYTES must be an integer between 1 MiB and 1 GiB.');
+    let loadedBytes = 0;
     for (const entry of catalog.skills) {
       if (snapshots.has(entry.skill_id)) fail('INVALID_CATALOG', 'Duplicate skill_id in catalog.');
       const relative = safeRelative(entry.package);
@@ -105,6 +114,8 @@ export class SkillLibrary {
       const packageRoot = await realpath(path.join(root, relative));
       if (!packageRoot.startsWith(root + path.sep)) fail('INVALID_PATH', 'Package must be inside the library directory.');
       const { files, frontmatter } = await readPackage(packageRoot);
+      loadedBytes += [...files.values()].reduce((n, bytes) => n + bytes.length, 0);
+      if (loadedBytes > byteLimit) fail('LIBRARY_TOO_LARGE', 'The package snapshot exceeds its aggregate memory budget. Remove unused saved bytes or raise SKILL_LIBRARY_MAX_BYTES deliberately.');
       const digests = [...files].map(([p, b]) => [p, hash(b)]);
       const revision = `sha256:${hash(JSON.stringify(digests))}`;
       const manifest = [...files].map(([p, b]) => ({ path: p, uri: `skill://library/${encodeURIComponent(entry.skill_id)}/${revision}/${frontmatter.name}/${p.split('/').map(encodeURIComponent).join('/')}`, sha256: hash(b), size_bytes: b.length, mime_type: mime(p) }));
@@ -118,11 +129,18 @@ export class SkillLibrary {
     const snapshots = new Map([...this.snapshots].filter(([id]) => allowed.has(id)));
     return new SkillLibrary(snapshots, hash(JSON.stringify([this.catalogRevision, projectId, [...allowed].sort()])), this.directory);
   }
-  catalog() {
-    return [...this.snapshots.values()].filter(s => s.entry.status === 'active').map(s => ({
+  catalog(includeArchived = false) {
+    return [...this.snapshots.values()].filter(s => includeArchived || s.entry.status === 'active').map(s => ({
       ...this.summary(s), personal_notes: s.entry.personal_notes, source: s.entry.source,
       file_count: s.files.size,
     }));
+  }
+  exportPackages() {
+    return [...this.snapshots.keys()].map(id => this.exportPackage(id)!);
+  }
+  exportPackage(id: string) {
+    const s = this.snapshots.get(id);
+    return s ? { entry: structuredClone(s.entry), revision: s.revision, files: [...s.files].map(([filePath, bytes]) => ({ path: filePath, content: bytes.toString('base64'), size_bytes: bytes.length, sha256: hash(bytes) })) } : undefined;
   }
   private lookup(id: string, revision?: string) {
     const s = this.snapshots.get(id);
@@ -132,7 +150,8 @@ export class SkillLibrary {
     return s;
   }
   private summary(s: Snapshot) {
-    return { skill_id: s.entry.skill_id, revision: s.revision, name: s.frontmatter.name, description: s.frontmatter.description, folder: s.entry.folder, standalone: s.entry.standalone, tags: s.entry.tags, preferred: s.entry.preferred, status: s.entry.status, requirements: s.entry.requirements };
+    const requirementsAssessment = s.entry.requirements_assessment ?? (s.entry.requirements.length ? 'curator_listed' : 'unknown');
+    return { skill_id: s.entry.skill_id, revision: s.revision, name: s.frontmatter.name, description: s.frontmatter.description, folder: s.entry.folder, standalone: s.entry.standalone, tags: s.entry.tags, preferred: s.entry.preferred, status: s.entry.status, requirements: s.entry.requirements, requirements_assessment: requirementsAssessment, author_compatibility: typeof s.frontmatter.compatibility === 'string' ? s.frontmatter.compatibility : null };
   }
   list(args: { tags?: string[]; preferred_only?: boolean; limit?: number; cursor?: string }) {
     const filters = hash(JSON.stringify({ tags: [...(args.tags ?? [])].sort(), preferred_only: args.preferred_only ?? false }));
@@ -151,20 +170,21 @@ export class SkillLibrary {
   }
   search(args: { query: string; tags?: string[]; capabilities?: string[]; limit?: number }) {
     const stop = new Set(['a', 'an', 'and', 'are', 'for', 'how', 'i', 'in', 'is', 'it', 'my', 'of', 'on', 'the', 'this', 'to', 'with']);
-    const tokens = [...new Set(args.query.toLowerCase().match(/[a-z0-9]+/g) ?? [])].filter(t => !stop.has(t));
+    const tokens = [...new Set(args.query.normalize('NFKC').toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])].filter(t => !stop.has(t));
     const matches = [...this.snapshots.values()].filter(s => s.entry.status === 'active' && (args.tags ?? []).every(t => s.entry.tags.includes(t))).map(s => {
-      const fields = [s.frontmatter.name, s.frontmatter.description, s.entry.tags.join(' '), s.entry.personal_notes].map(f => f.toLowerCase());
+      const fields = [s.frontmatter.name, s.frontmatter.description, s.entry.tags.join(' '), s.entry.personal_notes].map(f => f.normalize('NFKC').toLowerCase());
       const exact = s.frontmatter.name === args.query.toLowerCase().trim();
       const matched = tokens.filter(t => fields.some(f => f.includes(t)));
       const score = (exact ? 100 : 0) + tokens.reduce((n, t) => n + fields.reduce((sum, f, i) => sum + (f.includes(t) ? [8, 3, 5, 2][i]! : 0), 0), 0);
       const missing = args.capabilities ? s.entry.requirements.filter(r => !args.capabilities!.includes(r)) : [];
-      return { ...this.summary(s), score, match_reasons: exact ? ['Exact skill name'] : matched.map(t => `Matched: ${t}`), compatibility: args.capabilities ? (missing.length ? 'missing_requirements' : 'compatible') : 'unknown', missing_requirements: missing };
+      const summary = this.summary(s);
+      return { ...summary, score, match_reasons: exact ? ['Exact skill name'] : matched.map(t => `Matched: ${t}`), compatibility: !args.capabilities || summary.requirements_assessment === 'unknown' ? 'unknown' : missing.length ? 'missing_requirements' : 'compatible', missing_requirements: missing };
     }).filter(s => s.score > 0).sort((a, b) => b.score - a.score || Number(b.preferred) - Number(a.preferred) || a.skill_id.localeCompare(b.skill_id));
-    return { matches: matches.slice(0, args.limit ?? 5).map(({ score, ...s }) => s), total_matches: matches.length, compatibility_note: 'Capability matching covers curator-listed requirements only; it does not verify credentials, runtime, or all skill dependencies.' };
+    return { matches: matches.slice(0, args.limit ?? 5).map(({ score, ...s }) => s), total_matches: matches.length, compatibility_note: 'Compatible means only that curator-listed capabilities match. Unassessed requirements remain unknown. Author compatibility is preserved as free text; credentials, runtime, and complete dependencies are not verified.' };
   }
   get(id: string, revision?: string) {
     const s = this.lookup(id, revision);
-    return { ...this.summary(s), skill_uri: s.manifest.find(f => f.path === 'SKILL.md')!.uri, frontmatter: s.frontmatter, instructions: s.files.get('SKILL.md')!.toString('utf8'), manifest: s.manifest, source: s.entry.source, personal_notes: s.entry.personal_notes, activation_note: 'Retrieved instructions only. The host chooses whether to follow them. No scripts are run or permissions granted.' };
+    return { ...this.summary(s), previous_revisions: (s.entry.history ?? []).map(h => ({ commit: h.source.commit ?? null })), skill_uri: s.manifest.find(f => f.path === 'SKILL.md')!.uri, frontmatter: s.frontmatter, instructions: s.files.get('SKILL.md')!.toString('utf8'), manifest: s.manifest, source: s.entry.source, personal_notes: s.entry.personal_notes, activation_note: 'Retrieved instructions only. The host chooses whether to follow them. No scripts are run or permissions granted.' };
   }
   read(id: string, revision: string, filePath: string) {
     safeRelative(filePath);
@@ -181,5 +201,5 @@ export class SkillLibrary {
     } catch { encoding = 'base64'; content = bytes.toString('base64'); }
     return { skill_id: id, revision, ...file, encoding, content };
   }
-  stats() { return { skills: this.snapshots.size, files: [...this.snapshots.values()].reduce((n, s) => n + s.files.size, 0), catalog_revision: this.catalogRevision }; }
+  stats() { return { skills: this.snapshots.size, files: [...this.snapshots.values()].reduce((n, s) => n + s.files.size, 0), bytes: [...this.snapshots.values()].reduce((n, s) => n + [...s.files.values()].reduce((sum, bytes) => sum + bytes.length, 0), 0), catalog_revision: this.catalogRevision }; }
 }

@@ -2,9 +2,11 @@ import { lstat, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import { hash, LibraryError, type SkillLibrary } from './library.js';
-import { projectLock } from './native.js';
-import type { Report } from './local-skills.js';
+import { type SkillLibrary } from '../library/skill-library.js';
+import { hash } from '../shared/hash.js';
+import { LibraryError } from '../shared/library-error.js';
+import { projectLock } from '../shared/file-lock.js';
+import type { Report } from './scanner.js';
 
 const originSchema = z.object({ platform: z.string(), scope: z.string(), path: z.string(), project: z.string().optional(), project_path: z.string().optional(), plugin: z.string().optional(), registered: z.boolean() });
 const observationSchema = z.object({ key: z.string(), id: z.string(), skill_id: z.string().optional(), name: z.string(), description: z.string(), status: z.enum(['ready','installed','unsupported','cached']), folder: z.string(), issue: z.string().optional(), origin: originSchema, last_seen: z.string() });

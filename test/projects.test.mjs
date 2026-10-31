@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { SkillLibrary } from '../dist/library.js';
-import { ProjectStore } from '../dist/projects.js';
+import { SkillLibrary } from '../dist/library/skill-library.js';
+import { ProjectStore } from '../dist/projects/project-store.js';
 import { startHttp } from '../dist/http.js';
 
 async function fixture() {
@@ -109,6 +109,7 @@ test('UI project API requires a write token, serves connection settings, and sco
     const project = await created.json();
     const connection = await fetch(`${base}/api/projects/${project.id}/connection`).then(r => r.json());
     assert.equal(JSON.parse(connection.json).mcpServers.skill_library.env.SKILL_LIBRARY_PROJECT, project.id);
+    assert.deepEqual(JSON.parse(connection.json).mcpServers.skill_library.args, [fileURLToPath(new URL('../dist/stdio.js', import.meta.url))]);
     assert.match(connection.toml, /SKILL_LIBRARY_PROJECT/);
     assert.equal(JSON.parse(connection.example.json).mcpServers.skill_library.env.SKILL_LIBRARY_PROJECT, 'your-project-id');
     assert.equal(connection.example.http_path, '/mcp?project=your-project-id');
@@ -162,4 +163,44 @@ test('standalone skills have their own activation and are excluded from collecti
     assert.ok(skill.manifest.some(f => f.path === 'LICENSE'));
     assert.ok(!skill.manifest.some(f => f.path.startsWith('scripts/bin/')));
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('local setup check runs a real scoped stdio client without changing projects or exposing configuration', async () => {
+  const { root, library } = await fixture();
+  const listener = await startHttp(library, 0);
+  const base = `http://127.0.0.1:${listener.address().port}`;
+  try {
+    const state = await fetch(`${base}/api/state`).then(r => r.json());
+    const headers = { 'Content-Type': 'application/json', 'X-Skill-Library-Token': state.csrf_token };
+    const create = await fetch(`${base}/api/projects`, { method: 'POST', headers, body: JSON.stringify({ name: 'Setup check' }) });
+    const project = await create.json();
+    const check = (revision, useHeaders = headers) => fetch(`${base}/api/projects/${project.id}/check`, { method: 'POST', headers: useHeaders, body: JSON.stringify({ expected_revision: revision }) });
+    assert.equal((await check(project.revision, { 'Content-Type': 'application/json' })).status, 403);
+    const emptyResponse = await check(project.revision);
+    assert.equal(emptyResponse.status, 200);
+    const empty = await emptyResponse.json();
+    assert.equal(empty.available_skills, 0);
+    assert.equal(empty.retrieval_checked, false);
+    assert.equal(empty.disabled_skill_checked, true);
+    assert.equal(empty.external_client_verified, false);
+    const update = await fetch(`${base}/api/projects/${project.id}/skills`, { method: 'PATCH', headers, body: JSON.stringify({ skill_id: 'mattpocock/research', enabled: true, expected_revision: project.revision }) });
+    const selected = await update.json();
+    assert.equal((await check(project.revision)).status, 409);
+    const before = await readFile(path.join(root, 'projects.json'), 'utf8');
+    const response = await check(selected.revision);
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    assert.equal(result.status, 'passed');
+    assert.equal(result.transport, 'stdio');
+    assert.equal(result.available_skills, 1);
+    assert.equal(result.retrieval_checked, true);
+    assert.equal(result.disabled_skill_checked, true);
+    assert.equal(result.external_client_verified, false);
+    assert.equal(result.project_revision, selected.revision);
+    assert.ok(!JSON.stringify(result).includes(root));
+    assert.ok(!JSON.stringify(result).includes('instructions'));
+    assert.equal(await readFile(path.join(root, 'projects.json'), 'utf8'), before);
+    const unknown = await fetch(`${base}/api/projects/missing/check`, { method: 'POST', headers, body: JSON.stringify({ expected_revision: selected.revision }) });
+    assert.equal(unknown.status, 404);
+  } finally { await new Promise(resolve => listener.close(resolve)); await rm(root, { recursive: true, force: true }); }
 });

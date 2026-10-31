@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { link, lstat, mkdir, readFile, readdir, realpath, rename, rm, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, readFile, readdir, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { z } from 'zod';
-import { hash, LibraryError, SkillLibrary } from './library.js';
+import { SkillLibrary } from '../library/skill-library.js';
+import { hash } from '../shared/hash.js';
+import { LibraryError } from '../shared/library-error.js';
 
 export const nativeTargets = ['codex', 'claude-code', 'cursor'] as const;
 export const bindingSchema = z.object({ skill_id: z.string().min(1).max(128), root: z.string().min(1).max(1024), targets: z.array(z.enum(nativeTargets)).min(1).max(3) }).strict();
@@ -19,13 +21,13 @@ export async function validateRoot(root: string) {
   if (resolved === path.parse(resolved).root || resolved === os.homedir() || !(await lstat(resolved)).isDirectory()) error('INVALID_PROJECT_DIRECTORY', 'Choose a project directory, not your home or filesystem root.');
   return resolved;
 }
-async function parents(root: string, segments: string[]) {
+async function parents(root: string, segments: string[], create = true) {
   let current = root;
   for (const segment of segments) {
     current = path.join(current, segment);
     const st = await exists(current);
     if (st?.isSymbolicLink() || (st && !st.isDirectory())) error('NATIVE_CONFLICT', `The native destination ${segment} is not an ordinary directory.`);
-    if (!st) await mkdir(current);
+    if (!st && create) await mkdir(current);
   }
   return current;
 }
@@ -51,19 +53,53 @@ async function assertOwned(directory: string, owner: { library: string; project:
 }
 type Change = { kind: 'add' | 'remove'; final: string; stage: string; staging_root: string; owner: { library: string; project: string; skill: string } };
 type Journal = { version: 1; before_hash: string; after_hash: string; changes: Change[] };
+const journalSchema = z.object({ version: z.literal(1), before_hash: z.string().regex(/^[a-f0-9]{64}$/), after_hash: z.string().regex(/^[a-f0-9]{64}$/), changes: z.array(z.object({ kind: z.enum(['add', 'remove']), final: z.string(), stage: z.string(), staging_root: z.string(), owner: z.object({ library: z.string(), project: z.string(), skill: z.string() }).strict() }).strict()).max(3000) }).strict();
 
 /** Native writes are staged outside agent skill discovery and recoverable across a crash. */
 export class NativeTransaction {
   private journalFile: string;
   private journal?: Journal;
   constructor(private directory: string) { this.journalFile = path.join(directory, 'native-transaction.json'); }
+  async preview(before: NativeProject[], after: NativeProject[], library: SkillLibrary) {
+    const destinations = (projects: NativeProject[]) => projects.flatMap(p => p.native_bindings.filter(b => p.enabled_skills.includes(b.skill_id)).flatMap(b => b.targets.map(target => ({
+      path: path.join(b.root, folders[target], 'skills', library.get(b.skill_id).name), root: b.root, target,
+      owner: { library: this.directory, project: p.id, skill: b.skill_id },
+    }))));
+    const old = destinations(before), next = destinations(after);
+    const changes: { path: string; action: 'add' | 'remove' | 'unchanged'; conflict?: string }[] = [];
+    for (const item of [...old.filter(x => !next.some(n => n.path === x.path)), ...next]) {
+      const previous = old.find(x => x.path === item.path);
+      const desired = next.find(x => x.path === item.path);
+      const action = !desired ? 'remove' : previous ? 'unchanged' : 'add';
+      let conflict: string | undefined;
+      try {
+        if (await validateRoot(item.root) !== item.root) error('NATIVE_CONFLICT', 'The configured directory resolves elsewhere.');
+        await parents(item.root, [folders[item.target], 'skills'], false);
+        if (next.filter(x => x.path === item.path).length > 1) error('NATIVE_CONFLICT', 'Two selected skills would use this destination.');
+        if (previous && desired && JSON.stringify(previous.owner) !== JSON.stringify(desired.owner)) error('NATIVE_CONFLICT', 'Another project owns this destination.');
+        if (previous) await assertOwned(item.path, previous.owner);
+        else if (await exists(item.path)) error('NATIVE_CONFLICT', 'This destination already exists. Nothing will be overwritten.');
+      } catch (e) { conflict = e instanceof Error ? e.message : 'Destination could not be checked.'; }
+      changes.push({ path: item.path, action, ...(conflict ? { conflict } : {}) });
+    }
+    return { can_apply: changes.every(c => !c.conflict), changes };
+  }
   async recover() {
     if (!await exists(this.journalFile)) return;
-    const saved = JSON.parse(await readFile(this.journalFile, 'utf8')) as Journal;
-    if (saved.version !== 1 || !Array.isArray(saved.changes)) error('RECOVERY_REQUIRED', 'Native recovery data is invalid. Preserve it and inspect the server logs.');
+    let saved: Journal;
+    try {
+      const stat = await lstat(this.journalFile);
+      if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 16 * 1024 * 1024) throw new Error('Invalid recovery file');
+      saved = journalSchema.parse(JSON.parse(await readFile(this.journalFile, 'utf8')));
+    } catch { return error('RECOVERY_REQUIRED', 'Native recovery data is invalid. Preserve it and its staging folders for local inspection.'); }
     // A journal is generated by this app; still bound recovery to its exact managed paths.
     for (const c of saved.changes) {
       if (!['add', 'remove'].includes(c.kind) || c.owner.library !== this.directory || !path.isAbsolute(c.final) || !path.isAbsolute(c.stage) || !path.basename(c.staging_root).startsWith('.skill-library-tx-') || path.dirname(c.stage) !== c.staging_root || path.dirname(path.dirname(c.final)) !== path.dirname(c.staging_root) || path.basename(path.dirname(c.final)) !== 'skills' || !Object.values(folders).includes(path.basename(path.dirname(c.staging_root)))) error('RECOVERY_REQUIRED', 'Native recovery paths are invalid. Files were preserved.');
+      const root = path.dirname(path.dirname(c.staging_root));
+      if (await validateRoot(root) !== root) error('RECOVERY_REQUIRED', 'A recovery root resolves elsewhere. Files were preserved.');
+      await parents(root, [path.basename(path.dirname(c.staging_root)), 'skills'], false);
+      const staging = await exists(c.staging_root);
+      if (staging?.isSymbolicLink() || (staging && !staging.isDirectory())) error('RECOVERY_REQUIRED', 'A recovery staging folder was replaced. Files were preserved.');
     }
     const current = await readFile(path.join(this.directory, 'projects.json'), 'utf8').catch(() => '{"version":1,"projects":[]}');
     this.journal = saved;
@@ -118,7 +154,7 @@ export class NativeTransaction {
       }
       if (!changes.length) return;
       this.journal = { version: 1, before_hash: hash(beforeText), after_hash: hash(afterText), changes };
-      await writeFile(this.journalFile, JSON.stringify(this.journal), { flag: 'wx' });
+      await writeFile(this.journalFile, JSON.stringify(this.journal), { flag: 'wx', flush: true, mode: 0o600 });
     } catch (e) { for (const p of staged) await rm(p, { recursive: true, force: true }); throw e; }
   }
   async apply() {
@@ -138,29 +174,4 @@ export class NativeTransaction {
     for (const c of this.journal?.changes ?? []) await rm(c.staging_root, { recursive: true, force: true });
     await rm(this.journalFile, { force: true }); this.journal = undefined;
   }
-}
-export async function projectLock(directory: string, filename = 'projects.lock') {
-  const file = path.join(directory, filename);
-  const candidate = path.join(directory, `${filename}.${randomUUID()}.tmp`);
-  // Publish complete PID data atomically, so a crash cannot leave an empty lock.
-  await writeFile(candidate, String(process.pid), { flag: 'wx' });
-  try {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        await link(candidate, file);
-        return async () => { await rm(file, { force: true }); };
-      } catch (e) {
-        if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
-        const pid = Number(await readFile(file, 'utf8').catch(() => ''));
-        if (pid > 0) {
-          try { process.kill(pid, 0); }
-          catch (error) {
-            if ((error as NodeJS.ErrnoException).code === 'ESRCH') { await rm(file, { force: true }); continue; }
-          }
-        }
-        error('PROJECTS_BUSY', 'Another project change is in progress. Try again.');
-      }
-    }
-    return error('PROJECTS_BUSY', 'The project lock could not be acquired.');
-  } finally { await rm(candidate, { force: true }); }
 }

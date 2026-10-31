@@ -1,8 +1,10 @@
-import { projectLock } from './native.js';
+import { projectLock } from '../shared/file-lock.js';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { entrySchema, hash, LibraryError, readCatalog, readPackage, SkillLibrary, type Entry } from './library.js';
+import { entrySchema, readCatalog, readPackage, SkillLibrary, type Entry } from './skill-library.js';
+import { hash } from '../shared/hash.js';
+import { LibraryError } from '../shared/library-error.js';
 
 /** Publish a complete validated package before atomically updating the catalog. */
 export async function importPackage(directory: string, from: string, metadata: Omit<Entry, 'package'>, options: { private?: boolean } = { private: true }) {

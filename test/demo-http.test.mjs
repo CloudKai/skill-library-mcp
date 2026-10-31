@@ -2,8 +2,8 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import {createDemoApp} from '../dist/demo-http.js';
-import {MarketplaceClient} from '../dist/marketplace.js';
+import {createDemoApp} from '../dist/demo/http-app.js';
+import {MarketplaceClient} from '../dist/marketplace/client.js';
 async function listen(app){return await new Promise((resolve,reject)=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s));s.on('error',reject);});}
 test('cloud demo exposes only synthetic library and inventory and rejects all local writes',async()=>{
  const calls=[];const app=createDemoApp({async call(name,args){calls.push({name,args});return {items:[],provider:'fixture'};}});const server=await listen(app);const base=`http://127.0.0.1:${server.address().port}`;

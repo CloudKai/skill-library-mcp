@@ -18,7 +18,9 @@
     "validate": "node dist/cli.js validate",
     "import-skill": "node dist/import.js",
     "test": "npm run build && node --test test/*.test.mjs",
-    "scan-skills": "npm run build && node dist/scan-local.js"
+    "scan-skills": "npm run build && node dist/scan-local.js",
+    "local": "npm run build && node scripts/local.mjs",
+    "benchmark": "npm run build && node scripts/benchmark.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
