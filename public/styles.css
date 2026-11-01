@@ -374,3 +374,6 @@ kbd { position: absolute; right: 10px; font: 12px inherit; color: var(--muted); 
 .detail-advanced summary { min-height: 36px; padding-block: 8px; cursor: pointer; }
 .list-footer { flex-wrap: wrap; gap: 10px; }
 @media (max-height: 800px) { #connect-dialog .connection-code { max-height: 150px; } }
+
+.mode-toggle { margin-left: auto; flex-shrink: 0; text-decoration: none; }
+@media (max-width: 960px) { .hosted-empty { display: block; } }

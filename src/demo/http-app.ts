@@ -46,3 +46,24 @@ export function createDemoApp(market = new MarketplaceClient(process.env.SKILL_M
   app.use((error:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{const code=error instanceof LibraryError?error.code:error instanceof z.ZodError?'INVALID_INPUT':'INTERNAL_ERROR';res.status(code==='RATE_LIMITED'?429:code==='INVALID_INPUT'?400:code==='PROJECT_NOT_FOUND'?404:503).json({error:{code,message:error instanceof LibraryError?error.message:code==='INVALID_INPUT'?'Check the request values.':'The demo could not complete this request. Please retry shortly.'}});});
   return app;
 }
+
+/** Public root contains no pretend owner data. Samples require the /demo scope. */
+export function createHostedApp(market = new MarketplaceClient(process.env.SKILL_MARKETPLACE_URL, { hosted: true, serviceToken: process.env.MARKETPLACE_SERVICE_TOKEN })) {
+  const app = express();
+  const demo = createDemoApp(market);
+  app.disable('x-powered-by');
+  app.use((_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
+  app.use('/demo', demo);
+  app.get('/health', (_req, res) => res.json({ status: 'ok', mode: 'hosted', skills: 0 }));
+  app.get('/api/capabilities', (_req, res) => res.json({ mode: 'hosted', scan: false, native_install: false, shared_writes: false }));
+  app.get('/api/state', (_req, res) => res.json({ version, mode: 'hosted', skills: [], projects: [], csrf_token: '', catalog_revision: '', archived_skills: [] }));
+  app.get('/api/local-skills/inventory', (_req, res) => res.json({ groups: [], items: [], last_scan: null }));
+  app.use((req, res, next) => {
+    if ((req.path.startsWith('/api/') && !req.path.startsWith('/api/marketplace/')) || req.path === '/mcp') {
+      res.status(403).json({ error: { code: 'LOCAL_APP_REQUIRED', message: 'Run the local app to access real skills on your computer. Click Demo to explore sample data.' } }); return;
+    }
+    next();
+  });
+  app.use(demo); // Shared static pages and live discovery, without sample owner APIs.
+  return app;
+}

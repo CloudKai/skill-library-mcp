@@ -1,3 +1,4 @@
+import { appPath } from './runtime.js';
 import { inventoryItems, skillOrigins, sourceSummary, platformName } from './inventory.js';
 const $ = (selector) => document.querySelector(selector);
 const icons = {
@@ -22,7 +23,7 @@ const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 const escape = (value) => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = icon(el.dataset.icon); });
 
-const state = { demo: false, skills: [], projects: [], inventory: { groups: [], items: [], last_scan: null }, sourceId: null, inventoryQuery: '', csrf: '', projectId: null, filter: 'all', query: '', selected: null, saving: false, loaded: false, detailTab: 'instructions', expandedFolders: new Set() };
+const state = { demo: false, hosted: false, skills: [], projects: [], inventory: { groups: [], items: [], last_scan: null }, sourceId: null, inventoryQuery: '', csrf: '', projectId: null, filter: 'all', query: '', selected: null, saving: false, loaded: false, detailTab: 'instructions', expandedFolders: new Set() };
 const detailCache = new Map();
 let detailRequest = 0;
 let toastTimer;
@@ -34,8 +35,9 @@ const currentProject = () => state.projects.find(p => p.id === state.projectId);
 const title = (skill) => skill.name.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
 const emblem = (skill) => icon(skill.name.includes('bug') ? 'bug' : skill.name.includes('review') ? 'review' : 'document');
 const enabled = (skill) => currentProject()?.enabled_skills.includes(skill.skill_id) ?? false;
-function rememberProject(id) { try { localStorage.setItem('skill-library-project', id ?? '__library__'); } catch { /* Storage may be disabled. */ } }
-function savedProject() { try { return localStorage.getItem('skill-library-project'); } catch { return null; } }
+const preferenceKey = name => state.demo ? `demo:${name}` : name;
+function rememberProject(id) { try { localStorage.setItem(preferenceKey('skill-library-project'), id ?? '__library__'); } catch { /* Storage may be disabled. */ } }
+function savedProject() { try { return localStorage.getItem(preferenceKey('skill-library-project')); } catch { return null; } }
 function rememberFocus(element = document.activeElement) {
   if (!element?.dataset) return;
   const choices = [['source', 'data-source'], ['toggle', 'data-toggle'], ['toggleFolder', 'data-toggle-folder'], ['folder', 'data-folder'], ['project', 'data-project'], ['select', 'data-select'], ['detailTab', 'data-detail-tab']];
@@ -57,7 +59,7 @@ function restoreFocus(region) {
 }
 
 async function api(url, options = {}) {
-  const response = await fetch(url, { ...options, headers: { ...(state.csrf ? { 'X-Skill-Library-Token': state.csrf } : {}), ...(options.body ? { 'Content-Type': 'application/json', 'X-Skill-Library-Token': state.csrf } : {}), ...options.headers } });
+  const response = await fetch(appPath(url), { ...options, headers: { ...(state.csrf ? { 'X-Skill-Library-Token': state.csrf } : {}), ...(options.body ? { 'Content-Type': 'application/json', 'X-Skill-Library-Token': state.csrf } : {}), ...options.headers } });
   let data;
   try { data = await response.json(); } catch { throw new Error('The library returned an unreadable response. Refresh and try again.'); }
   if (!response.ok) throw new Error(data.error?.message || 'The library could not complete this request.');
@@ -91,7 +93,7 @@ function visibleSkills() {
 function chooseProject(id) {
   if (state.demo && !id) id = state.projects[0]?.id ?? null;
   state.sourceId = null;
-  try { localStorage.removeItem('skill-library-source'); } catch {}
+  try { localStorage.removeItem(preferenceKey('skill-library-source')); } catch {}
   state.projectId = id;
   state.filter = 'all';
   state.query = '';
@@ -101,7 +103,7 @@ function chooseProject(id) {
 }
 function chooseSource(id) {
   state.sourceId = id;
-  try { localStorage.setItem('skill-library-source', id); } catch {}
+  try { localStorage.setItem(preferenceKey('skill-library-source'), id); } catch {}
   state.projectId = null;
   state.selected = null;
   state.inventoryQuery = '';
@@ -169,7 +171,7 @@ function render() {
   $('#connect-project').hidden = !project;
   $('#undo-selection').hidden = !lastSelection || lastSelection.project_id !== project?.id;
   $('#undo-selection').disabled = state.saving || lastSelection?.revision !== project?.revision;
-  $('#create-first-project').hidden = state.demo || state.projects.length > 0;
+  $('#create-first-project').hidden = state.demo || state.hosted || state.projects.length > 0;
   $('#count-all').textContent = state.skills.length;
   const count = state.skills.filter(enabled).length;
   $('#count-enabled').textContent = count;
@@ -219,6 +221,7 @@ async function renderDetails() {
   const request = ++detailRequest;
   const selected = state.selected;
   if (!selected) {
+    if (state.hosted) { $('#skill-detail').innerHTML = '<div class="detail-empty hosted-empty"><h2>Use your real skills locally</h2><p>This website cannot scan your computer. Run the local app to discover and import your skills, or click Demo to explore sample data.</p><a class="button secondary" href="/guide.html#connect">Local setup guide</a></div>'; return; }
     const firstUse = !state.demo && !state.projects.length;
     $('#skill-detail').innerHTML = firstUse
       ? `<div class="detail-empty setup-empty"><span data-icon="folder">${icon('folder')}</span><h2>Set up your first project</h2><ol><li>Create a project to keep its selection separate.</li><li>Enable the skills you want it to use.</li><li>Connect your assistant and check its available skills.</li></ol><button class="button primary" type="button" data-create-project>Create project</button><p>Or browse the collection first. Scanning is optional.</p></div>`
@@ -256,6 +259,8 @@ async function loadState() {
     state.skills = data.skills;
     state.projects = data.projects.filter(p => !p.archived);
     state.demo = data.mode === 'demo';
+    state.hosted = data.mode === 'hosted';
+    if (state.hosted) { $('#scan-open').disabled = true; $('#new-project').disabled = true; }
     if (state.demo) {
       let saved = {}; try { saved = JSON.parse(localStorage.getItem('skill-library-demo-selections') || '{}'); } catch {}
       state.projects = state.projects.map(p => ({ ...p, enabled_skills: Array.isArray(saved[p.id]) ? saved[p.id].filter(id => state.skills.some(s => s.skill_id === id)) : p.enabled_skills }));
@@ -265,7 +270,7 @@ async function loadState() {
     if (!state.loaded) {
       const saved = savedProject();
       state.projectId = saved === '__library__' && !state.demo ? null : state.projects.find(p => p.id === saved)?.id ?? state.projects[0]?.id ?? null;
-      let source; try { source = localStorage.getItem('skill-library-source'); } catch {}
+      let source; try { source = localStorage.getItem(preferenceKey('skill-library-source')); } catch {}
       if (source && (source === 'all' || state.inventory.groups.some(g => g.id === source))) { state.sourceId = source; state.projectId = null; }
     } else if (state.projectId && !state.projects.some(p => p.id === state.projectId)) state.projectId = null;
     state.loaded = true;

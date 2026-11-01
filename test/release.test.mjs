@@ -194,3 +194,17 @@ test('a fresh source catalog starts an empty owner app with working MCP discover
     assert.deepEqual((await client.callTool({ name: 'list_skills', arguments: {} })).structuredContent.skills, []);
   } finally { await client.close(); if (listener) await new Promise(resolve => listener.close(resolve)); await rm(root, { recursive: true, force: true }); }
 });
+
+test('local demo is isolated from real skills, projects and writes', async () => {
+ const f = await fixture();
+ try {
+  const before = await fetch(f.base+'/api/state').then(r=>r.json());
+  assert.ok(before.skills.every(s=>s.skill_id.startsWith('fixture/')));
+  const sample = await fetch(f.base+'/demo/api/state').then(r=>r.json());
+  assert.equal(sample.mode,'demo');assert.ok(sample.skills.every(s=>s.skill_id.startsWith('demo/')));
+  assert.equal((await fetch(f.base+'/demo/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,403);
+  assert.equal((await fetch(f.base+'/demo/api/skill?id=fixture/research')).status,503);
+  const after = await fetch(f.base+'/api/state').then(r=>r.json());
+  assert.deepEqual(after.projects,before.projects);assert.deepEqual(after.skills,before.skills);
+ } finally {await f.close();}
+});

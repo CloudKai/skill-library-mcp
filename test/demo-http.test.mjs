@@ -18,3 +18,24 @@ test('public library MCP returns sample skills and fails closed for unknown proj
 test('normal local discovery configuration still rejects remote and credential-bearing URLs',async()=>{
  for(const endpoint of ['https://example.vercel.app/mcp','http://remote.example/mcp','http://user:password@127.0.0.1:3334/mcp'])await assert.rejects(new MarketplaceClient(endpoint).call('list_rankings',{view:'trending'}),{code:'MARKETPLACE_UNAVAILABLE'});
 });
+
+test('hosted default has no samples; only explicit demo URLs expose sample data', async () => {
+ const { createHostedApp } = await import('../dist/demo/http-app.js');
+ const server = await listen(createHostedApp({async call(){return {items:[],provider:'fixture'};}}));
+ const base = `http://127.0.0.1:${server.address().port}`;
+ try {
+  const real = await fetch(base+'/api/state').then(r=>r.json());
+  assert.equal(real.mode,'hosted'); assert.deepEqual(real.skills,[]); assert.deepEqual(real.projects,[]);
+  assert.deepEqual((await fetch(base+'/api/local-skills/inventory').then(r=>r.json())).items,[]);
+  const demo = await fetch(base+'/demo/api/state').then(r=>r.json());
+  assert.equal(demo.mode,'demo'); assert.equal(demo.skills.length,3); assert.equal(demo.projects[0].name,'Example');
+  const client = new Client({name:'explicit-demo',version:'1'});
+  try { await client.connect(new StreamableHTTPClientTransport(new URL(base+'/demo/mcp?project=example-web'))); assert.equal((await client.callTool({name:'list_skills',arguments:{}})).structuredContent.skills.length,2); } finally { await client.close(); }
+  assert.equal((await fetch(base+'/api/skill?id=demo/plan-a-change')).status,403);
+  assert.equal((await fetch(base+'/demo/api/skill?id=demo/plan-a-change')).status,200);
+  assert.equal((await fetch(base+'/demo/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,403);
+  assert.equal((await fetch(base+'/mcp',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,403);
+  assert.match(await fetch(base+'/demo/').then(r=>r.text()),/demo-mode.js/);
+  assert.match(await fetch(base+'/demo/marketplace.html').then(r=>r.text()),/Skill Marketplace/);
+ } finally {await new Promise(r=>server.close(r));}
+});

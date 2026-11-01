@@ -48,7 +48,7 @@ src/
 
 Existing classes retain focused responsibilities: `SkillLibrary` handles immutable retrieval snapshots, `ProjectStore` handles project changes, `NativeTransaction` handles recoverable filesystem changes, `LocalSkillScanner` owns expiring scan plans, `LocalInventory` persists observations, and `MarketplaceClient` talks to discovery MCP. Composition connects these classes; inheritance adds no useful relationship here.
 
-The root executable files deliberately keep their names. Existing npm commands and external configurations pointing to `dist/stdio.js` or `dist/http.js` continue to work. Other compiled modules follow the feature folders. `index.mjs` loads the isolated demo factory from `dist/demo/http-app.js`.
+The root executable files deliberately keep their names. Existing npm commands and external configurations pointing to `dist/stdio.js` or `dist/http.js` continue to work. Other compiled modules follow the feature folders. `index.mjs` loads the hosted factory from `dist/demo/http-app.js`: the default workspace exposes no owner or sample data, while `/demo/` mounts the isolated sample app. The local HTTP app mounts that same read-only sample app at `/demo/`, behind the local Origin/Host checks. Frontend API paths and navigation remain inside the active URL scope, with separate demo workspace preferences.
 
 Resource paths resolve relative to modules rather than the working directory. Shared helpers do not import feature implementations. The hosted demo constructs its own synthetic library and never creates the local application object.
 

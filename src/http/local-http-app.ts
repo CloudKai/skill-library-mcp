@@ -1,3 +1,4 @@
+import { createDemoApp } from '../demo/http-app.js';
 import { LocalInventory } from '../local-skills/inventory.js';
 import { scanSchema } from '../local-skills/scanner.js';
 import { nativeTargets } from '../projects/native-transaction.js';
@@ -25,6 +26,7 @@ export class LocalHttpApp {
   constructor(private readonly application: LibraryApplication) {
     if (this.httpToken && !/^[a-f0-9]{64}$/.test(this.httpToken)) throw new LibraryError('INVALID_INPUT', 'SKILL_LIBRARY_HTTP_TOKEN must be a 64-character lowercase hex token.');
     this.registerSecurity();
+    this.app.use('/demo', createDemoApp(this.application.marketplace));
     this.registerWriteProtection();
     this.app.use('/api/restore/preview', express.json({ limit: '64mb' }));
     this.app.use(express.json({ limit: '128kb' }));

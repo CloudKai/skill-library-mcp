@@ -1,3 +1,4 @@
+import { appPath } from './runtime.js';
 import { ownerRequest } from './owner-api.js';
 const $ = selector => document.querySelector(selector);
 let state;
@@ -32,7 +33,7 @@ async function skillChanged() {
   $('#skill-preferred').checked = summary.preferred;
   $('#skill-archived').checked = summary.status === 'archived';
   if (summary.status === 'archived') return;
-  const result = await fetch(`/api/skill?id=${encodeURIComponent(skillId)}`).then(r => r.json());
+  const result = await fetch(appPath(`/api/skill?id=${encodeURIComponent(skillId)}`)).then(r => r.json());
   if ($('#settings-skill').value !== skillId) return;
   if (result.error) throw new Error(result.error.message);
   selectedSkill = result;
@@ -42,16 +43,16 @@ async function skillChanged() {
 }
 async function load() {
   const projectId = $('#settings-project').value, skillId = $('#settings-skill').value || new URLSearchParams(location.search).get('skill');
-  const response = await fetch('/api/state');
+  const response = await fetch(appPath('/api/state'));
   if (!response.ok) throw new Error('The owner API is unavailable. Restart the local app and refresh.');
   state = await response.json();
-  if (state.mode === 'demo') { $('#settings-controls').hidden = true; status('Library maintenance requires the local app. This public demo cannot change shared data.'); return; }
+  if (state.mode === 'demo' || state.mode === 'hosted') { $('#settings-controls').hidden = true; status('Library maintenance requires the local app. This website cannot change local data.'); return; }
   $('#settings-project').replaceChildren(...state.projects.map(p => option(`${p.name}${p.archived ? ' · Archived' : ''}`, p.id)));
   if (state.projects.some(p => p.id === projectId)) $('#settings-project').value = projectId;
   $('#settings-skill').replaceChildren(...[...state.skills, ...(state.archived_skills ?? [])].map(s => option(`${s.name}${s.status === 'archived' ? ' · Archived' : ''}`, s.skill_id)));
   if ([...state.skills, ...(state.archived_skills ?? [])].some(s => s.skill_id === skillId)) $('#settings-skill').value = skillId;
   projectChanged(); await skillChanged();
-  const health = await fetch('/api/status').then(r => r.json());
+  const health = await fetch(appPath('/api/status')).then(r => r.json());
   $('#library-health').textContent = health.error ? 'Status unavailable.' : `${health.skills} skills · ${health.files} files · ${(health.bytes / 1048576).toFixed(1)} MiB loaded · HTTP generation ${state.catalog_revision.slice(0, 12)}. Stdio clients keep their own snapshot until reconnected.`;
   $('#recent-operations').replaceChildren(...(health.operations ?? []).map(operation => {
     const row = document.createElement('li');
@@ -90,7 +91,7 @@ $('#metadata-form').addEventListener('submit', event => {
   });
 });
 $('#check-marketplace').addEventListener('click', () => void perform($('#check-marketplace'), async () => {
-  const result = await fetch('/api/marketplace/status').then(r => r.json());
+  const result = await fetch(appPath('/api/marketplace/status')).then(r => r.json());
   $('#marketplace-health').textContent = result.message ?? 'Discovery status unavailable.'; status('Discovery probe finished. Provider credentials and quotas remain unverified.');
 }));
 $('#refresh-library').addEventListener('click', () => void perform($('#refresh-library'), async () => {
@@ -145,4 +146,4 @@ $('#rollback-skill').addEventListener('click', () => void perform($('#rollback-s
   $('#rollback-reviewed').checked = false; await load(); status(result.note);
 }));
 $('#update-commit').value = new URLSearchParams(location.search).get('commit') ?? '';
-void load().then(() => { if (state?.mode !== 'demo') status('Ready. Changes stay local; review filesystem effects before applying.'); }).catch(error => status(error.message));
+void load().then(() => { if (state?.mode !== 'demo' && state?.mode !== 'hosted') status('Ready. Changes stay local; review filesystem effects before applying.'); }).catch(error => status(error.message));

@@ -261,3 +261,7 @@ For public GitHub packages, enter a reviewed 40-character commit in Library sett
 An optional private `SKILL_LIBRARY_HTTP_TOKEN` (64 lowercase hex characters) requires a Bearer header on HTTP MCP requests. Working HTTP connection settings include the header after explicitly revealing local configuration. Default HTTP mode still assumes trusted local processes, and the owner UI is not a multi-user authentication system. Prefer stdio and never tunnel the owner API.
 
 Package snapshots default to a 128 MiB aggregate byte budget; `SKILL_LIBRARY_MAX_BYTES` may deliberately set a value from 1 MiB to 1 GiB. Portable backups are limited to 64 MiB. `npm run benchmark` measures synthetic metadata workloads. Linux/macOS Node 22/24 CI is defined; Windows/native-host behavior needs separate qualification. See [the implementation record](docs/audit-2026-10-27/IMPLEMENTATION.md) for guarantees, caveats and verification.
+
+## Real workspace and demo
+
+The app opens the real workspace at `/`. Use **Demo** in the top-right corner to open `/demo/`, which contains isolated sample skills and browser-only selections. **Exit demo** returns to `/`; demo navigation never changes the real workspace selection. The local app serves both routes. The hosted website starts without saved skills because it cannot scan a visitor’s computer; use the local app for real scanning, imports and project settings. Hosted marketplace discovery remains live.

@@ -167,3 +167,5 @@ Source inventory rows retain the flat, divided list language: a skill name, mute
 - Do not invent marketplace statistics, ratings, or downloads.
 - Do not show a saved enabled state before the server saves.
 - Do not introduce marketing typography, imagery, or decorative panel shadows.
+
+The top-right shell control opens Demo at `/demo/` and becomes Exit demo within that scope. The default route uses real local data; the hosted default explains that local scanning requires the local app and shows no sample projects. Demo mode is explicit in both its URL and banner, and demo preferences do not replace real workspace preferences.

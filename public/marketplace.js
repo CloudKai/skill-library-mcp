@@ -1,3 +1,4 @@
+import { appPath } from './runtime.js';
 import { createInstaller } from './marketplace-install.js';
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -11,13 +12,13 @@ catch {
     return '';
 } }
 const count = n => typeof n === 'number' ? new Intl.NumberFormat().format(n) : 'Unavailable';
-async function api(url, options = {}) { const r = await fetch(url, { ...options, headers: { ...(options.body ? { 'Content-Type': 'application/json', 'X-Skill-Library-Token': s.token } : {}), ...options.headers } }); const d = await r.json(); if (!r.ok) {
+async function api(url, options = {}) { const r = await fetch(appPath(url), { ...options, headers: { ...(options.body ? { 'Content-Type': 'application/json', 'X-Skill-Library-Token': s.token } : {}), ...options.headers } }); const d = await r.json(); if (!r.ok) {
     const e = new Error(d.error?.message ?? 'Request failed. Retry shortly.');
     e.code = d.error?.code;
     e.retry = d.error?.retry_after;
     throw e;
 } return d; }
-async function owner() { const d = await api('/api/state'); s.projects = d.projects; s.owned = d.skills; s.token = d.csrf_token; s.demo = d.mode === 'demo'; }
+async function owner() { const d = await api('/api/state'); s.projects = d.projects; s.owned = d.skills; s.token = d.csrf_token; s.demo = d.mode === 'demo' || d.mode === 'hosted'; }
 const savedSkill = item => s.owned.find(x => x.source.url.replace(/\.git$/, '').toLowerCase() === `https://github.com/${item.source}`.toLowerCase() && (item.path === undefined ? x.name === item.slug : x.source.path === item.path));
 const installed = item => Boolean(savedSkill(item));
 const revisionMismatch = item => Boolean(savedSkill(item) && savedSkill(item).source.commit !== item.commit);
