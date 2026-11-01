@@ -4,7 +4,8 @@
 .env*
 node_modules
 dist
-library
+# Exclude owner data only; src/library must be compiled.
+/library
 output
 outputs
 .impeccable
