@@ -89,6 +89,7 @@ function visibleSkills() {
   });
 }
 function chooseProject(id) {
+  if (state.demo && !id) id = state.projects[0]?.id ?? null;
   state.sourceId = null;
   try { localStorage.removeItem('skill-library-source'); } catch {}
   state.projectId = id;
@@ -101,7 +102,6 @@ function chooseProject(id) {
 function chooseSource(id) {
   state.sourceId = id;
   try { localStorage.setItem('skill-library-source', id); } catch {}
-  $('#inventory-navigation').open = true;
   state.projectId = null;
   state.selected = null;
   state.inventoryQuery = '';
@@ -113,10 +113,12 @@ function renderInventoryNavigation() {
   const inventory = state.inventory;
   const nav = $('#inventory-nav');
   const groups = inventory.groups || [];
-  const row = (id, name, count, hint = '') => `<button type="button" class="nav-item ${state.sourceId === id ? 'selected' : ''}" data-source="${escape(id)}" aria-current="${state.sourceId === id ? 'page' : 'false'}"><span class="project-label"><span>${escape(name)}</span>${hint ? `<small>${escape(hint)}</small>` : ''}</span><span class="nav-count">${count}</span></button>`;
-  nav.innerHTML = inventory.last_scan ? row('all', 'All discovered', inventory.items.length) + groups.map(g => row(g.id, g.name, g.count, g.path ? g.path.split('/').slice(-2).join('/') : '')).join('') : '<p class="nav-loading">Scan to discover source locations.</p>';
+  const row = (id, name, count, hint = '') => `<button type="button" class="nav-item ${state.sourceId ? 'selected' : ''}" data-source="${escape(id)}" aria-current="${state.sourceId ? 'page' : 'false'}"><span class="project-label"><span>${escape(name)}</span>${hint ? `<small>${escape(hint)}</small>` : ''}</span><span class="nav-count">${count}</span></button>`;
+  nav.innerHTML = row('all', 'Found on this computer', inventory.items.length);
   $('#inventory-group').innerHTML = '<option value="all">All discovered locations</option>' + groups.map(g => `<option value="${escape(g.id)}">${escape(g.name)}${g.path ? ` · ${escape(g.path.split('/').slice(-2).join('/'))}` : ''}</option>`).join('');
   $('#inventory-group').value = state.sourceId || 'all';
+  $('#inventory-group').hidden = state.demo;
+  document.querySelector('label[for="inventory-group"]')?.toggleAttribute('hidden', state.demo);
 }
 function originDetails(origins) {
   if (!origins.length) return '';
@@ -127,8 +129,8 @@ function renderInventory() {
   const group = inventory.groups.find(g => g.id === state.sourceId);
   const items = inventoryItems(inventory, state.sourceId, state.inventoryQuery);
   $('#breadcrumb').textContent = 'Library / Source locations';
-  $('#page-title').textContent = group?.name || 'All discovered skills';
-  $('#page-description').textContent = 'Skills observed on this computer, grouped by where they were found. Source locations do not change project access.';
+  $('#page-title').textContent = group?.name || 'Found on this computer';
+  $('#page-description').textContent = state.demo ? 'Example scan results only. Run the local app to find skills on your computer.' : 'Skills detected on your computer. Choose a source location to filter the results.';
   $('#connect-project').hidden = true;
   $('#inventory-coverage').textContent = state.inventoryError || (inventory.last_scan ? `${items.length} skills · ${state.demo ? 'Sample inventory' : 'Latest scan'} ${new Date(inventory.last_scan.at).toLocaleString()}${inventory.last_scan.complete ? '' : ' · Partial coverage'}. Observations from other scans are retained; check each location’s last-seen time.` : 'Run a scan to discover global installations and projects with skill folders.');
   $('#inventory-coverage-detail').textContent = inventory.last_scan?.coverage || '';
@@ -142,9 +144,9 @@ function renderNavigation() {
   $('#library-nav').classList.toggle('selected', !state.projectId && !state.sourceId);
   $('#library-nav').setAttribute('aria-current', !state.projectId && !state.sourceId ? 'page' : 'false');
   $('#projects-nav').innerHTML = state.projects.map(p => `<button type="button" class="nav-item ${p.id === state.projectId ? 'selected' : ''}" data-project="${escape(p.id)}" aria-current="${p.id === state.projectId ? 'page' : 'false'}" title="${escape(p.path || p.name)}"><span class="nav-icon">${icon('folder')}</span><span class="project-label">${escape(p.name)}</span><span class="nav-count">${p.enabled_skills.filter(id => state.skills.some(s => s.skill_id === id)).length}</span></button>`).join('') || '<p class="nav-loading">No projects yet.</p>';
-  $('#project-select').innerHTML = '<option value="">All skills</option>' + state.projects.map(p => `<option value="${escape(p.id)}">${escape(p.name)}</option>`).join('');
-  if (state.inventory.last_scan) $('#project-select').innerHTML += '<optgroup label="Found on this computer"><option value="source:all">All discovered skills</option>' + state.inventory.groups.map(g => `<option value="source:${escape(g.id)}">${escape(g.name)}${g.path ? ` · ${escape(g.path.split('/').slice(-2).join('/'))}` : ''}</option>`).join('') + '</optgroup>';
-  $('#project-select').value = state.sourceId ? `source:${state.sourceId}` : state.projectId || '';
+  $('#project-heading').hidden = state.demo;
+  $('#project-select').innerHTML = (state.demo ? '' : '<option value="">All skills</option>') + state.projects.map(p => `<option value="${escape(p.id)}">${escape(p.name)}</option>`).join('') + '<option value="source:all">Found on this computer</option>';
+  $('#project-select').value = state.sourceId ? 'source:all' : state.projectId || '';
   renderInventoryNavigation();
 }
 function skillRow(skill, project) {
@@ -261,11 +263,10 @@ async function loadState() {
     state.csrf = data.csrf_token;
     try { state.inventory = await api('/api/local-skills/inventory'); state.inventoryError = ''; } catch (error) { state.inventoryError = error.message; }
     if (!state.loaded) {
-      if (state.inventory.last_scan) $('#inventory-navigation').open = true;
       const saved = savedProject();
-      state.projectId = saved === '__library__' ? null : state.projects.find(p => p.id === saved)?.id ?? state.projects[0]?.id ?? null;
+      state.projectId = saved === '__library__' && !state.demo ? null : state.projects.find(p => p.id === saved)?.id ?? state.projects[0]?.id ?? null;
       let source; try { source = localStorage.getItem('skill-library-source'); } catch {}
-      if (source && (source === 'all' || state.inventory.groups.some(g => g.id === source))) { state.sourceId = source; state.projectId = null; $('#inventory-navigation').open = true; }
+      if (source && (source === 'all' || state.inventory.groups.some(g => g.id === source))) { state.sourceId = source; state.projectId = null; }
     } else if (state.projectId && !state.projects.some(p => p.id === state.projectId)) state.projectId = null;
     state.loaded = true;
     clearError();
@@ -557,7 +558,6 @@ $('#scan-form').addEventListener('submit', async event => {
     localScan.items.filter(x => x.status === 'ready').forEach(x => selectedScans.add(x.id));
     state.inventory = await api('/api/local-skills/inventory');
     state.inventoryError = '';
-    $('#inventory-navigation').open = true;
     chooseSource('all');
     renderLocalScan(); $('#scan-status').textContent = 'Scan complete. Review the skills and coverage before importing.';
     if ($('#scan-dialog').open) $('#scan-results-title').focus();
